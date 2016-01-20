@@ -1,0 +1,24 @@
+{
+	"name": "gooi-server",
+	"version": "0.0.1",
+	"description": "Server for gooi to allow for easy catching",
+	"main": "main.js",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"keywords": [
+		"gooi",
+		"files",
+		"transfer",
+		"send",
+		"transmit",
+		"server"
+	],
+	"author": "Tom Smeding <hallo@tomsmeding.nl> (http://tomsmeding.com)",
+	"license": "MIT",
+	"dependencies": {
+		"body-parser": "^1.14.2",
+		"express": "^4.13.3",
+		"mkdirp": "^0.5.1"
+	}
+}
