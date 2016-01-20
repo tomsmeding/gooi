@@ -9,11 +9,11 @@ if(process.argv.length!=3){
 const http=require("http"),
       fs=require("fs");
 
-const HTTPHOST="tomsmeding.com";
-const HTTPPORT=11056;
+const HTTPHOST="tomsmeding.com",
+      HTTPPORT=11056;
 
 const fname=process.argv[2],
-      safefname=fname.replace(/[\0-\x1f\x7f-\xff\/]/g,"");
+      safefname=fname.replace(/[\0-\x1f\x7f-\xff\/]/g,"?");
 
 let filecontents;
 try {
