@@ -75,7 +75,6 @@ let req=http.request({
 	res.on("end",()=>{
 		if(success){
 			toClipboard.sync(bodytext.trim());
-			console.log("(copied)");
 		}
 	});
 });
