@@ -43,10 +43,11 @@ setInterval(()=>{
 	const dirlist=fs.readdirSync(FILES_DIRNAME);
 	const nowtime=new Date().getTime();
 	for(let file of dirlist){
-		const stats=fs.statSync(`${FILES_DIRNAME}/${file}`);
+		const path=`${FILES_DIRNAME}/${file}`;
+		const stats=fs.statSync(path);
 		if(!stats.isFile())continue;
 		if(nowtime-stats.mtime.getTime()>3600*1000){ //1 hour storage
-			fs.unlinkSync(file);
+			fs.unlinkSync(path);
 		}
 	}
 },3600*1000); //every hour
