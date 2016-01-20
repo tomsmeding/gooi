@@ -1,0 +1,26 @@
+{
+	"name": "gooi",
+	"version": "0.0.1",
+	"description": "Transfer files with gooi",
+	"main": "main.js",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"keywords": [
+		"gooi",
+		"files",
+		"transfer",
+		"send",
+		"transmit",
+		"client"
+	],
+	"author": "Tom Smeding <hallo@tomsmeding.nl> (http://tomsmeding.com)",
+	"license": "MIT",
+	"dependencies": {
+		"to-clipboard": "^0.2.0"
+	},
+	"preferGlobal": "true",
+	"bin": {
+		"gooi": "main.js"
+	}
+}
