@@ -43,10 +43,14 @@ setInterval(()=>{
 	const nowtime=new Date().getTime();
 	for(let file of dirlist){
 		const path=`${FILES_DIRNAME}/${file}`;
-		const stats=fs.statSync(path);
-		if(!stats.isFile())continue;
-		if(nowtime-stats.mtime.getTime()>3600*1000){ //1 hour storage
-			fs.unlinkSync(path);
+		try {
+			const stats=fs.statSync(path);
+			if(!stats.isFile())continue;
+			if(nowtime-stats.mtime.getTime()>3600*1000){ //1 hour storage
+				fs.unlinkSync(path);
+			}
+		} catch(e){
+			console.log(`[cleanup] Couldn't process '${path}': ${e.message}`);
 		}
 	}
 },3600*1000); //every hour
