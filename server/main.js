@@ -28,7 +28,7 @@ try {
 const genidcode=()=>{
 	let i=startid;
 	return ()=>{
-		const code=`0000000${(i*42%4294967291).toString(36)}`.slice(-7);
+		const code=`0000000${(i*47%4294967291).toString(36)}`.slice(-7);
 		//(x -> nx) : F_p -> F_p with p prime and 0<n<x is a bijection
 		i++;
 		fs.writeFileSync(`${FILES_DIRNAME}/startid`,i.toString());
