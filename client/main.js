@@ -43,7 +43,7 @@ if(!fname){
 	usageandexit(1);
 }
 
-const safefname=fname.replace(/[\0-\x1f\x7f-\xff\/]/g,"?");
+const safefname=fname.replace(/^.*\//,"").replace(/[\0-\x1f\x7f-\xff]/g,"?");
 
 let filecontents;
 try {
