@@ -17,7 +17,6 @@
 	"author": "Tom Smeding <hallo@tomsmeding.nl> (http://tomsmeding.com)",
 	"license": "MIT",
 	"dependencies": {
-		"body-parser": "^1.14.2",
 		"express": "^4.13.3",
 		"mkdirp": "^0.5.1"
 	}

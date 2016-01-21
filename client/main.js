@@ -45,11 +45,11 @@ if(!fname){
 
 const safefname=fname.replace(/^.*\//,"").replace(/[\0-\x1f\x7f-\xff]/g,"?");
 
-let filecontents;
+let filedesc=null;
 try {
-	filecontents=fs.readFileSync(fname);
+	filedesc=fs.openSync(fname,"r");
 } catch(e){
-	console.log(`Error while reading file: ${e.message}`);
+	console.log(`Error while opening file: ${e.message}`);
 	process.exit(1);
 }
 
@@ -61,7 +61,7 @@ let req=http.request({
 	path:`/gooi/${encodeURIComponent(safefname)}`,
 	headers:{
 		"Content-Type":"application/octet-stream",
-		"Content-Length":filecontents.length
+		"Tranfer-Encoding":"chunked"
 	}
 },(res)=>{
 	const success=res.statusCode==200;
@@ -79,15 +79,15 @@ let req=http.request({
 	});
 });
 req.on("error",(e)=>{
-	console.log(`Request threw an error: ${e.message}`);
+	console.log(`Upload threw an error: ${e.message}`);
 	process.exit(1);
 });
 
-try {
-	req.write(filecontents);
-} catch(e){
-	console.log(`Error while writing file to stream: ${e.message}`);
-	req.close();
-	process.exit(1);
+let buf=new Buffer(4096);
+function writechunk(){
+	const nread=fs.readSync(filedesc,buf,0,4096,null);
+	if(nread==4096)req.write(buf,writechunk);
+	else if(nread>0)req.write(buf.slice(0,nread),writechunk);
+	else req.end();
 }
-req.end();
+writechunk();

@@ -3,7 +3,6 @@
 
 const fs=require("fs"),
       http=require("http"),
-      bodyParser=require("body-parser"),
       app=require("express")(),
       mkdirp=require("mkdirp"),
       httpServer=http.Server(app);
@@ -52,8 +51,6 @@ setInterval(()=>{
 	}
 },3600*1000); //every hour
 
-app.use(bodyParser.raw({"type":"*/*"}));
-
 app.post("/gooi/:fname",(req,res)=>{
 	const fname=req.params.fname.replace(/[\0-\x1f\x7f-\xff\/]/g,"");
 	if(fname.length==0){
@@ -62,33 +59,70 @@ app.post("/gooi/:fname",(req,res)=>{
 		return;
 	}
 	const id=genidcode();
-	try {
-		fs.writeFileSync(`${FILES_DIRNAME}/${id}`,req.body);
-		fs.writeFileSync(`${FILES_DIRNAME}/${id}-fname`,fname);
-	} catch(e){
+
+	let fd;
+	try {fd=fs.openSync(`${FILES_DIRNAME}/${id}`,"w");}
+	catch(e){
 		console.log(e);
 		res.writeHead(500);
-		res.end();
+		res.end("Could not open file to write to\n");
 		return;
 	}
-	res.writeHead(200);
-	res.end(`http://${HTTPHOST}:${HTTPPORT}/vang/${id}\n`);
+	req.on("data",function(data){
+		if(data instanceof Buffer)fs.writeSync(fd,data,0,data.length);
+		else fs.writeSync(fs,data);
+	});
+	req.on("end",function(){
+		fs.closeSync(fd);
+		fs.writeFileSync(`${FILES_DIRNAME}/${id}-fname`,fname);
+		res.writeHead(200);
+		res.end(`http://${HTTPHOST}:${HTTPPORT}/vang/${id}\n`);
+	});
+	req.on("error",function(e){
+		console.log(e);
+		res.writeHead(500);
+		res.end("Error while writing file\n");
+		try {fs.closeSync(fd);} catch(e){}
+	});
 });
 
 app.get("/vang/:id",(req,res)=>{
 	const id=req.params.id.replace(/[^0-9a-z]/g,"").substr(0,10);
 	if(!fs.existsSync(`${FILES_DIRNAME}/${id}`)||!fs.existsSync(`${FILES_DIRNAME}/${id}-fname`)){
 		res.writeHead(404);
-		res.end();
+		res.end("404 not found");
 		return;
 	}
 	const fname=fs.readFileSync(`${FILES_DIRNAME}/${id}-fname`).toString();
 	const fnamequo=`"${fname.replace(/([\\"])/g,"\\$1")}"`
+
+	let filedesc=null;
+	try {
+		filedesc=fs.openSync(`${FILES_DIRNAME}/${id}`,"r");
+	} catch(e){
+		console.log(e);
+		res.writeHead(500);
+		res.end("Could not open file\n");
+		return;
+	}
 	res.writeHead(200,{
 		"Content-Type":"application/octet-stream",
-		"Content-Disposition":`attachment; filename=${fnamequo}`
+		"Content-Disposition":`attachment; filename=${fnamequo}`,
+		"Transfer-Encoding":"chunked"
 	});
-	res.end(fs.readFileSync(`${FILES_DIRNAME}/${id}`));
+	try {
+		let buf=new Buffer(4096);
+		while(true){
+			const nread=fs.readSync(filedesc,buf,0,4096,null);
+			if(nread==4096)res.write(buf);
+			else if(nread>0)res.write(buf.slice(0,nread));
+			else break;
+		}
+		res.end();
+	} catch(e){
+		console.log(e);
+		res.close();
+	}
 });
 
 let server=httpServer.listen(HTTPPORT,()=>{
