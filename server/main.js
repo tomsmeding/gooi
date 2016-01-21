@@ -114,19 +114,19 @@ app.get("/vang/:id",(req,res)=>{
 		"Content-Disposition":`attachment; filename=${fnamequo}`,
 		"Transfer-Encoding":"chunked"
 	});
-	try {
-		let buf=new Buffer(4096);
-		while(true){
-			const nread=fs.readSync(filedesc,buf,0,4096,null);
-			if(nread==4096)res.write(buf);
-			else if(nread>0)res.write(buf.slice(0,nread));
-			else break;
+	let buf=new Buffer(4096);
+	function writechunk(){
+		let nread;
+		try {nread=fs.readSync(filedesc,buf,0,4096,null);}
+		catch(e){
+			console.log(e);
+			res.close(); //can't really write a header anymore
 		}
-		res.end();
-	} catch(e){
-		console.log(e);
-		res.close();
+		if(nread==4096)res.write(buf,writechunk);
+		else if(nread>0)res.write(buf.slice(0,nread),writechunk);
+		else res.end();
 	}
+	writechunk();
 });
 
 let server=httpServer.listen(HTTPPORT,()=>{
