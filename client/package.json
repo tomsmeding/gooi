@@ -21,6 +21,6 @@
 	},
 	"preferGlobal": "true",
 	"bin": {
-		"gooi": "main.js"
+		"gooi": "bin/gooi.js"
 	}
 }
