@@ -8,12 +8,17 @@ const http=require("http"),
 const HTTPHOST="tomsmeding.com",
       HTTPPORT=11056;
 
+function stderr(/* strings */) {
+	const args = Array.prototype.slice.call(arguments);
+	process.stderr.write(args.join(' ') + '\n');
+}
 
 function usageandexit(code){
-	console.log("Usage: gooi [-ch] <file>");
-	console.log("Uploads the given file and provides a handy, short-lived, shareable download link.");
-	console.log("  -c  Copy the link to the clipboard");
-	console.log("  -h  Show this");
+	stderr("Usage: gooi [-cqh] <file>");
+	stderr("Uploads the given file and provides a handy, short-lived, shareable download link.");
+	stderr("  -c  Copy the link to the clipboard");
+	stderr("  -q  Only print the URL");
+	stderr("  -h  Show this");
 	process.exit(code);
 }
 
@@ -30,7 +35,7 @@ for(let i=2;i<process.argv.length;i++){
 		continue;
 	}
 	for(let j=1;j<arg.length;j++){
-		if("ch".indexOf(arg[j])==-1){
+		if("chq".indexOf(arg[j])==-1){
 			console.log(`Unrecognised flag '${arg[j]}'`);
 			usageandexit(1);
 		}
@@ -75,7 +80,7 @@ let req=http.request({
 	res.on("end",()=>{
 		if(success && opts.c){
 			toClipboard.sync(bodytext.trim());
-			process.stderr.write('(copied)\n');
+			if(!opts.q)stderr('(copied)');
 		}
 	});
 });
