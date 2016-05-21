@@ -73,8 +73,9 @@ let req=http.request({
 		process.stdout.write(data)
 	});
 	res.on("end",()=>{
-		if(success){
+		if(success && opts.c){
 			toClipboard.sync(bodytext.trim());
+			process.stderr.write('(copied)\n');
 		}
 	});
 });
