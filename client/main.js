@@ -23,15 +23,11 @@ function usageandexit(code){
 }
 
 let opts={};
-let fname;
+const files=[];
 for(let i=2;i<process.argv.length;i++){
 	const arg=process.argv[i];
 	if(arg[0]!='-'){
-		if(!fname)fname=arg;
-		else {
-			console.log("Two files given on the command line; gooi doesn't support multiple-upload yet.");
-			usageandexit(1);
-		}
+		files.push(arg);
 		continue;
 	}
 	for(let j=1;j<arg.length;j++){
@@ -43,57 +39,72 @@ for(let i=2;i<process.argv.length;i++){
 	}
 }
 if(opts.h)usageandexit(0);
-if(!fname){
+if(files.length===0){
 	console.log("No filename given!");
 	usageandexit(1);
 }
 
-const safefname=fname.replace(/^.*\//,"").replace(/[\0-\x1f\x7f-\xff]/g,"?");
-
-let filedesc=null;
-try {
-	filedesc=fs.openSync(fname,"r");
-} catch(e){
-	console.log(`Error while opening file: ${e.message}`);
-	process.exit(1);
-}
-
-let req=http.request({
-	protocol:"http:",
-	hostname:HTTPHOST,
-	port:HTTPPORT,
-	method:"POST",
-	path:`/gooi/${encodeURIComponent(safefname)}`,
-	headers:{
-		"Content-Type":"application/octet-stream",
-		"Tranfer-Encoding":"chunked"
-	}
-},(res)=>{
-	const success=res.statusCode==200;
-	if(!success)console.log(`Couldn't upload: ${res.statusCode}`);
-	res.setEncoding("utf8");
-	let bodytext="";
-	res.on("data",(data)=>{
-		if(success)bodytext+=data;
-		process.stdout.write(data)
-	});
-	res.on("end",()=>{
-		if(success && opts.c){
-			toClipboard.sync(bodytext.trim());
-			if(!opts.q)stderr('(copied)');
+let left = files.length;
+const items = new Array(files.length);
+function push(index, val) {
+	items[index] = val;
+	if (--left === 0) {
+		for (let i = 0; i < files.length; i++) {
+			const res = items[i];
+			process.stdout.write(res);
 		}
-	});
-});
-req.on("error",(e)=>{
-	console.log(`Upload threw an error: ${e.message}`);
-	process.exit(1);
-});
-
-let buf=new Buffer(4096);
-function writechunk(){
-	const nread=fs.readSync(filedesc,buf,0,4096,null);
-	if(nread==4096)req.write(buf,writechunk);
-	else if(nread>0)req.write(buf.slice(0,nread),writechunk);
-	else req.end();
+	}
 }
-writechunk();
+
+for(let i=0;i<files.length;i++){
+	const fname=files[i];
+	const safefname=fname.replace(/^.*\//,"").replace(/[\0-\x1f\x7f-\xff]/g,"?");
+
+	let filedesc=null;
+	try {
+		filedesc=fs.openSync(fname,"r");
+	} catch(e){
+		console.log(`Error while opening file: ${e.message}`);
+		process.exit(1);
+	}
+
+	let req=http.request({
+		protocol:"http:",
+		hostname:HTTPHOST,
+		port:HTTPPORT,
+		method:"POST",
+		path:`/gooi/${encodeURIComponent(safefname)}`,
+		headers:{
+			"Content-Type":"application/octet-stream",
+			"Tranfer-Encoding":"chunked"
+		}
+	},(res)=>{
+		const success=res.statusCode==200;
+		if(!success)console.log(`Couldn't upload: ${res.statusCode}`);
+		res.setEncoding("utf8");
+		let bodytext="";
+		res.on("data",(data)=>{
+			if(success)bodytext+=data;
+			push(i, data);
+		});
+		res.on("end",()=>{
+			if(success && opts.c && files.length === 0){
+				toClipboard.sync(bodytext.trim());
+				if(!opts.q)stderr('(copied)');
+			}
+		});
+	});
+	req.on("error",(e)=>{
+		console.log(`Upload threw an error: ${e.message}`);
+		process.exit(1);
+	});
+
+	let buf=new Buffer(4096);
+	function writechunk(){
+		const nread=fs.readSync(filedesc,buf,0,4096,null);
+		if(nread==4096)req.write(buf,writechunk);
+		else if(nread>0)req.write(buf.slice(0,nread),writechunk);
+		else req.end();
+	}
+	writechunk();
+}
