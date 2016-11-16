@@ -1,6 +1,6 @@
 {
 	"name": "gooi",
-	"version": "0.0.1",
+	"version": "0.0.2",
 	"description": "Transfer files with gooi",
 	"main": "main.js",
 	"scripts": {

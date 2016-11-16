@@ -45,7 +45,7 @@ module.exports = class Gooi {
 				callback(e, null);
 			});
 
-			let buf=new Buffer(4096);
+			let buf=Buffer.alloc(4096);
 			function writechunk(){
 				const nread=fs.readSync(filedesc,buf,0,4096,null);
 				if(nread==4096)req.write(buf,writechunk);

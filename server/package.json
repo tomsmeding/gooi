@@ -1,6 +1,6 @@
 {
 	"name": "gooi-server",
-	"version": "0.0.1",
+	"version": "0.0.2",
 	"description": "Server for gooi to allow for easy catching",
 	"main": "main.js",
 	"scripts": {
