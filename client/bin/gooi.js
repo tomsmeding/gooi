@@ -21,15 +21,11 @@ function usageandexit(code){
 }
 
 let opts={};
-let fname;
+let fnames=[];
 for(let i=2;i<process.argv.length;i++){
 	const arg=process.argv[i];
 	if(arg[0]!='-'){
-		if(!fname)fname=arg;
-		else {
-			console.log("Two files given on the command line; gooi doesn't support multiple-upload yet.");
-			usageandexit(1);
-		}
+		fnames.push(arg);
 		continue;
 	}
 	for(let j=1;j<arg.length;j++){
@@ -41,21 +37,21 @@ for(let i=2;i<process.argv.length;i++){
 	}
 }
 if(opts.h)usageandexit(0);
-if(!fname){
+if(fnames.length==0){
 	console.log("No filename given!");
 	usageandexit(1);
 }
 
-gooi.gooi(fname, function (e, r) {
+gooi.gooi(fnames, function (e, r) {
 	if (e != null) {
-		console.log('error while uploading', e);
+		console.log('error while uploading:', e);
 		return;
 	}
 
 	console.log(r);
 
 	if(opts.c){
-		toClipboard.sync(bodytext.trim());
+		toClipboard.sync(r.trim());
 		if(!opts.q)stderr('(copied)');
 	}
 });
