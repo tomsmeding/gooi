@@ -11,10 +11,10 @@ const HTTPHOST="tomsmeding.com";
 const HTTPPORT=11056;
 const FILES_DIRNAME="files";
 
-const uniqid=()=>{
+const uniqid=(()=>{
 	let i=0;
 	return ()=>i=(i+1)%4294967291; //last prime under 2^32
-}();
+})();
 
 mkdirp.sync(FILES_DIRNAME);
 
@@ -25,7 +25,7 @@ try {
 } catch(_){
 	startid=42424242;
 }
-const genidcode=()=>{
+const genidcode=(()=>{
 	let i=startid;
 	return ()=>{
 		const code=`0000000${(i*47%4294967291).toString(36)}`.slice(-7);
@@ -36,7 +36,7 @@ const genidcode=()=>{
 		for(let j=0;j<7;j++)res+=code[2*j%7]; //same goes here
 		return res;
 	}
-}();
+})();
 
 setInterval(()=>{
 	const dirlist=fs.readdirSync(FILES_DIRNAME);
