@@ -114,7 +114,7 @@ app.get("/vang/:id",(req,res)=>{
 		"Content-Disposition":`attachment; filename=${fnamequo}`,
 		"Transfer-Encoding":"chunked"
 	});
-	let buf=new Buffer(4096);
+	let buf=Buffer.alloc(4096);
 	function writechunk(){
 		let nread;
 		try {nread=fs.readSync(filedesc,buf,0,4096,null);}
