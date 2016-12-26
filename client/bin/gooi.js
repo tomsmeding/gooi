@@ -4,7 +4,7 @@
 const Gooi=require('../main.js'),
       toClipboard=require("to-clipboard");
 
-const gooi = new Gooi("tomsmeding.com", 11056, '/gooi/');
+const gooi = new Gooi("tomsmeding.com", 443, '/gooi/');
 
 function stderr(/* strings */) {
 	const args = Array.prototype.slice.call(arguments);

@@ -1,14 +1,14 @@
 "use strict";
 
-const http=require("http");
+const https=require("https");
 const fs=require("fs");
 const path=require("path");
 const util=require("util");
 const yazl=require("yazl");
 
 function upload(gooi,stream,filename,callback){
-	let req=http.request({
-		protocol:"http:",
+	let req=https.request({
+		protocol:"https:",
 		hostname:gooi.hostname,
 		port:gooi.port,
 		method:"POST",
