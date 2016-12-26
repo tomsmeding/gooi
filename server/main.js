@@ -80,7 +80,7 @@ app.post("/gooi/:fname",(req,res)=>{
 		fs.closeSync(fd);
 		fs.writeFileSync(`${FILES_DIRNAME}/${id}-fname`,fname);
 		res.writeHead(200);
-		res.end(`https://${HTTPHOST}:${HTTPPORT}/vang/${id}\n`);
+		res.end(`https://${HTTPHOST}/vang/${id}\n`);
 	});
 	req.on("error",function(e){
 		console.log(e);
