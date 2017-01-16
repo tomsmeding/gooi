@@ -17,7 +17,7 @@
 	"author": "Tom Smeding <hallo@tomsmeding.nl> (http://tomsmeding.com)",
 	"license": "MIT",
 	"dependencies": {
-		"to-clipboard": "^0.2.0",
+		"to-clipboard": "^0.3.0",
 		"yazl": "^2.4.2"
 	},
 	"preferGlobal": "true",
