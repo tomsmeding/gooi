@@ -92,9 +92,8 @@ module.exports = class Gooi {
 			if(fnames.length!=1||!fs.statSync(fnames[0]).isFile()){
 				let zipname=params.uploadFname;
 				if(zipname==null)zipname=new Date().getTime().toString()+".zip";
-				else if(zipname.slice(zipname.length-4)!=".zip")zipname+=".zip";
-				zipname=makeFilenameSafe(zipname);
-				const zipbase=zipname.slice(0,zipname.length-4);
+				else zipname=makeFilenameSafe(zipname);
+				const zipbase=zipname.replace(/\.zip$/,"");
 				const enumf=enumerateFiles(fnames);
 				createZipStream(zipbase,enumf,(stream)=>upload(this,stream,zipname,callback));
 			} else {
