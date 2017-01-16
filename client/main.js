@@ -66,6 +66,10 @@ function createZipStream(basename,fnames,cb){
 	cb(zipfile.outputStream);
 }
 
+function makeFilenameSafe(fname){
+	return fname.replace(/^.*\//,"").replace(/[\0-\x1f\x7f-\xff]/g,"?");
+}
+
 module.exports = class Gooi {
 	constructor(hostname, port, prefix) {
 		this.hostname = hostname;
@@ -73,8 +77,11 @@ module.exports = class Gooi {
 		this.prefix = prefix;
 	}
 
-	gooi(fnames, callback) {
-		const self = this;
+	gooi(fnames, params, callback) {
+		if(callback==null){
+			callback=params;
+			params={};
+		}
 
 		if(fnames.length==0){
 			callback(new Error("No files to gooi"),null);
@@ -83,13 +90,16 @@ module.exports = class Gooi {
 
 		try {
 			if(fnames.length!=1||!fs.statSync(fnames[0]).isFile()){
-				const zipbase=new Date().getTime().toString();
-				const zipname=zipbase+".zip";
+				let zipname=params.uploadFname;
+				if(zipname==null)zipname=new Date().getTime().toString()+".zip";
+				else if(zipname.slice(zipname.length-4)!=".zip")zipname+=".zip";
+				zipname=makeFilenameSafe(zipname);
+				const zipbase=zipname.slice(0,zipname.length-4);
 				const enumf=enumerateFiles(fnames);
 				createZipStream(zipbase,enumf,(stream)=>upload(this,stream,zipname,callback));
 			} else {
-				const safefname=fnames[0].replace(/^.*\//,"").replace(/[\0-\x1f\x7f-\xff]/g,"?");
-				upload(this,fs.createReadStream(fnames[0]),safefname,callback);
+				if(params.uploadFname==null)params.uploadFname=fnames[0];
+				upload(this,fs.createReadStream(fnames[0]),makeFilenameSafe(params.uploadFname),callback);
 			}
 		} catch(e){
 			callback(e,null);
