@@ -30,7 +30,7 @@ for(let i=2;i<process.argv.length;i++){
 	}
 	for(let j=1;j<arg.length;j++){
 		if("chq".indexOf(arg[j])==-1){
-			console.log(`Unrecognised flag '${arg[j]}'`);
+			stderr(`Unrecognised flag '${arg[j]}'`);
 			usageandexit(1);
 		}
 		opts[arg[j]]=true;
@@ -38,13 +38,13 @@ for(let i=2;i<process.argv.length;i++){
 }
 if(opts.h)usageandexit(0);
 if(fnames.length==0){
-	console.log("No filename given!");
+	stderr("No filename given!");
 	usageandexit(1);
 }
 
 gooi.gooi(fnames, function (e, r) {
 	if (e != null) {
-		console.log('error while uploading:', e);
+		stderr('error while uploading:', e);
 		return;
 	}
 

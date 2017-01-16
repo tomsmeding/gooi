@@ -45,7 +45,6 @@ function enumerateFiles(fnames){
 		const base=path.basename(file[0]);
 		const dir=path.dirname(file[0]);
 		const stat=fs.statSync(file[0]);
-		console.log(`enumerate: found ${util.inspect(file)}`);
 		if(stat.isFile())res.push(file);
 		else if(stat.isDirectory()){
 			const items=fs.readdirSync(file[0])
@@ -59,7 +58,6 @@ function enumerateFiles(fnames){
 function createZipStream(basename,fnames,cb){
 	const zipfile=new yazl.ZipFile();
 	for(let file of fnames){
-		console.log(`Adding file '${file[1]}' -- '${file[0]}'`);
 		zipfile.addFile(file[0],basename+"/"+file[1]);
 	}
 	process.nextTick(()=>{
