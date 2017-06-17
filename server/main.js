@@ -56,7 +56,7 @@ setInterval(()=>{
 },3600*1000); //every hour
 
 app.post("/gooi/:fname",(req,res)=>{
-	const fname=req.params.fname.replace(/[\0-\x1f\x7f-\xff\/]/g,"");
+	const fname=req.params.fname.replace(/[\0-\x1f\x7f-\xff\/"\\]/g,"");
 	if(fname.length==0){
 		res.writeHead(400);
 		res.end("Invalid filename given");
@@ -98,7 +98,7 @@ app.get("/vang/:id",(req,res)=>{
 		return;
 	}
 	const fname=fs.readFileSync(`${FILES_DIRNAME}/${id}-fname`).toString();
-	const fnamequo=`"${fname.replace(/([\\"])/g,"\\$1")}"`
+	const fnamequo=`"${fname}"`;
 
 	let filedesc=null;
 	try {
