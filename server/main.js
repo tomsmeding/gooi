@@ -72,12 +72,9 @@ app.post("/gooi/:fname",(req,res)=>{
 		res.end("Could not open file to write to\n");
 		return;
 	}
-	req.on("data",function(data){
-		if(data instanceof Buffer)fs.writeSync(fd,data,0,data.length);
-		else fs.writeSync(fs,data);
-	});
+	const stream=fs.createWriteStream(null,{fd});
+	req.pipe(stream);
 	req.on("end",function(){
-		fs.closeSync(fd);
 		fs.writeFileSync(`${FILES_DIRNAME}/${id}-fname`,fname);
 		res.writeHead(200);
 		res.end(`https://${HTTPHOST}/vang/${id}\n`);
@@ -114,19 +111,10 @@ app.get("/vang/:id",(req,res)=>{
 		"Content-Disposition":`attachment; filename=${fnamequo}`,
 		"Transfer-Encoding":"chunked"
 	});
-	let buf=Buffer.alloc(4096);
-	function writechunk(){
-		let nread;
-		try {nread=fs.readSync(filedesc,buf,0,4096,null);}
-		catch(e){
-			console.log(e);
-			res.close(); //can't really write a header anymore
-		}
-		if(nread==4096)res.write(buf,writechunk);
-		else if(nread>0)res.write(buf.slice(0,nread),writechunk);
-		else res.end();
-	}
-	writechunk();
+	fs.createReadStream(null,{fd:filedesc}).pipe(res);
+	res.on("error",function(e){
+		console.log(e);
+	});
 });
 
 let server=httpServer.listen(HTTPPORT,()=>{
