@@ -21,7 +21,7 @@ mkdirp.sync(FILES_DIRNAME);
 let startid;
 try {
 	startid=+fs.readFileSync(`${FILES_DIRNAME}/startid`);
-	if(isNaN(startid)||startId<0)throw 0;
+	if(isNaN(startid)||startid<0)throw 0;
 } catch(_){
 	startid=42424242;
 }
