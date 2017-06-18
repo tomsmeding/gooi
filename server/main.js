@@ -74,7 +74,7 @@ app.post("/gooi/:fname",(req,res)=>{
 		res.end("Could not open file to write to\n");
 		return;
 	}
-	const stream=fs.createWriteStream(null,{fd});
+	const stream=fs.createWriteStream(null,{fd: fd});
 	req.pipe(stream);
 	req.on("end",function(){
 		fs.writeFileSync(`${FILES_DIRNAME}/${id}-fname`,fname);
@@ -117,6 +117,29 @@ app.get("/vang/:id",(req,res)=>{
 	res.on("error",function(e){
 		console.log(e);
 	});
+});
+
+app.post("/houvast/:id",(req,res)=>{
+	const id=req.params.id.replace(/[^0-9a-z]/g,"").substr(0,10);
+	if(!fs.existsSync(`${FILES_DIRNAME}/${id}`)||!fs.existsSync(`${FILES_DIRNAME}/${id}-fname`)){
+		res.writeHead(404);
+		res.end("404 not found");
+		return;
+	}
+
+	try {
+		let fd=fs.openSync(`${FILES_DIRNAME}/${id}`,"a");
+		const now=new Date();
+		fs.futimesSync(fd,now,now);
+		fs.closeSync(fd);
+	} catch(e){
+		console.log(e);
+		res.writeHead(500);
+		res.end("Could not open file\n");
+		return;
+	}
+	res.writeHead(200);
+	res.end("200 ok");
 });
 
 let server=httpServer.listen(HTTPPORT,()=>{
