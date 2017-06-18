@@ -42,12 +42,14 @@ setInterval(()=>{
 	const dirlist=fs.readdirSync(FILES_DIRNAME);
 	const nowtime=new Date().getTime();
 	for(let file of dirlist){
+		if(file.slice(-6)=="-fname"||file=="startid")continue;
 		const path=`${FILES_DIRNAME}/${file}`;
 		try {
 			const stats=fs.statSync(path);
 			if(!stats.isFile())continue;
 			if(nowtime-stats.mtime.getTime()>24*3600*1000){ //24 hour storage
 				fs.unlinkSync(path);
+				fs.unlinkSync(path+"-fname");
 			}
 		} catch(e){
 			console.log(`[cleanup] Couldn't process '${path}': ${e.message}`);
