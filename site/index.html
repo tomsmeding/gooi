@@ -25,7 +25,6 @@ body {
 	text-align: center;
 	color: white;
 	font-size: 4em;
-	line-height: calc(100vh - 100px);
 	font-family: sans-serif;
 	font-weight: 100;
 
@@ -33,11 +32,10 @@ body {
 	border: 3px white solid;
 
 	transition: .5s all cubic-bezier(0, 1, 0.2, 1);
-	transition-property: transform, width, border-radius, height, margin, line-height, background-color;
+	transition-property: transform, width, border-radius, height, margin, background-color;
 	will-change: transform;
 }
 body.small #dropzone {
-	line-height: calc(100vw - 100px);
 	width: calc(100vw - 100px);
 	height: calc(100vw - 100px);
 }
@@ -58,12 +56,21 @@ body.small #dropzone {
 #dropzone.result.error {
 	background-color: #a7013e;
 }
+
+#dropzone span {
+	position: absolute;
+	left: 0;
+	right: 0;
+
+	top: 50%;
+	transform: translateY(-50%);
+}
 		</style>
 	</head>
 
 	<body>
 		<div id="dropzone">
-			gooi a file
+			<span>gooi a file</span>
 		</div>
 		<script>
 function setWidthClass () {
@@ -88,18 +95,19 @@ function isFile (e) {
 }
 
 var dropzone = document.getElementById('dropzone');
+var output = dropzone.querySelector('span');
 dropzone.addEventListener('dragenter', function (e) {
 	if (!isFile(e)) {
 		return;
 	}
 
 	dropzone.className = 'hovering';
-	dropzone.innerText = 'drop it';
+	output.innerText = 'drop it';
 });
 dropzone.addEventListener('dragleave', function (e) {
 	e.preventDefault();
 	dropzone.className = '';
-	dropzone.innerText = 'gooi a file';
+	output.innerText = 'gooi a file';
 });
 dropzone.addEventListener('dragover', function (e) {
 	e.preventDefault();
@@ -107,12 +115,12 @@ dropzone.addEventListener('dragover', function (e) {
 
 function showUrl (url) {
 	dropzone.className = 'result';
-	dropzone.innerText = url;
+	output.innerText = url;
 }
 
 function showError (message) {
 	dropzone.className = 'result error';
-	dropzone.innerText = message;
+	output.innerText = message;
 }
 
 dropzone.addEventListener('drop', function (e) {
