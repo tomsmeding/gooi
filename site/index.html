@@ -118,6 +118,16 @@ function showUrl (url) {
 	output.innerText = url;
 }
 
+function showProgress (e) {
+	dropzone.className = 'result progress';
+	if (e != null) {
+		var percentage = Math.round((e.loaded / e.total) * 100);
+		output.innerHTML = 'uploading<br>' + percentage+'% ('+e.loaded+'/'+e.total+')';
+	} else {
+		output.innerHTML = 'uploading';
+	}
+}
+
 function showError (message) {
 	dropzone.className = 'result error';
 	output.innerText = message;
@@ -149,11 +159,16 @@ dropzone.addEventListener('drop', function (e) {
 			showError('unknown error, see console');
 		};
 
+		xhr.onprogress = function (e) {
+			showProgress(e);
+		}
+
 		xhr.open('POST', '/gooi/'+encodeURIComponent(file.name), true);
 		xhr.responseType = 'text';
 		xhr.send(arrbuf);
 	};
 	reader.readAsArrayBuffer(file);
+	showProgress(null);
 });
 		</script>
 	</body>
