@@ -100,8 +100,11 @@ app.get("/vang/:id",(req,res)=>{
 	const fnamequo=`"${fname}"`;
 
 	let filedesc=null;
+	let stats=null;
 	try {
-		filedesc=fs.openSync(`${FILES_DIRNAME}/${id}`,"r");
+		const datafname=`${FILES_DIRNAME}/${id}`;
+		filedesc=fs.openSync(datafname,"r");
+		stats=fs.statSync(datafname);
 	} catch(e){
 		console.log(e);
 		res.writeHead(500);
@@ -110,8 +113,8 @@ app.get("/vang/:id",(req,res)=>{
 	}
 	res.writeHead(200,{
 		"Content-Type":"application/octet-stream",
-		"Content-Disposition":`attachment; filename=${fnamequo}`,
-		"Transfer-Encoding":"chunked"
+		"Content-Length":stats.size.toString(),
+		"Content-Disposition":`attachment; filename=${fnamequo}`
 	});
 	fs.createReadStream(null,{fd:filedesc}).pipe(res);
 	res.on("error",function(e){
