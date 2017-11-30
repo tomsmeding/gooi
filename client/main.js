@@ -77,18 +77,18 @@ module.exports = class Gooi {
 		this.prefix = prefix;
 	}
 
-	gooi(fnames, params, callback) {
-		if(callback==null){
-			callback=params;
-			params={};
-		}
+	gooi(fnames, params = {}) {
+		return new Promise((resolve, reject) => {
+			const callback = (e, r) => {
+				if (e != null) reject(e);
+				else resolve(r);
+			};
 
-		if(fnames.length==0){
-			callback(new Error("No files to gooi"),null);
-			return;
-		}
+			if(fnames.length==0){
+				reject(new Error("No files to gooi"));
+				return;
+			}
 
-		try {
 			if(fnames.length!=1||!fs.statSync(fnames[0]).isFile()){
 				let zipname=params.uploadFname;
 				if(zipname==null)zipname=new Date().getTime().toString()+".zip";
@@ -100,13 +100,10 @@ module.exports = class Gooi {
 				if(params.uploadFname==null)params.uploadFname=fnames[0];
 				upload(this,fs.createReadStream(fnames[0]),makeFilenameSafe(params.uploadFname),callback);
 			}
-		} catch(e){
-			callback(e,null);
-			return;
-		}
+		});
 	}
 
-	vang(id, callback) {
+	vang(id) {
 		// TODO
 	}
 }
