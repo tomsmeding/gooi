@@ -58,16 +58,13 @@ if(fnames.length==0){
 	usageandexit(1);
 }
 
-gooi.gooi(fnames, {uploadFname: uploadFname}, function (e, r) {
-	if (e != null) {
-		stderr('error while uploading:', e);
-		return;
-	}
-
+gooi.gooi(fnames, {uploadFname: uploadFname}).then(r => {
 	console.log(r);
 
 	if(opts.c){
 		toClipboard.sync(r.trim());
 		if(!opts.q)stderr('(copied)');
 	}
+}).catch(e => {
+	stderr('error while uploading:', e);
 });
