@@ -4,7 +4,7 @@
 const Gooi=require('../main.js'),
       toClipboard=require("to-clipboard");
 
-const gooi = new Gooi("tomsmeding.com", 443, '/gooi/');
+const gooi = new Gooi("tomsmeding.com", 443, '/vang/', '/gooi/');
 
 function stderr(/* strings */) {
 	const args = Array.prototype.slice.call(arguments);
@@ -12,12 +12,13 @@ function stderr(/* strings */) {
 }
 
 function usageandexit(code){
-	stderr("Usage: gooi [-cqh] <file>");
+	stderr("Usage: gooi [-h] ([-cqn] | vang) <file>");
 	stderr("Uploads the given file and provides a handy, short-lived, shareable download link.");
+	stderr("  -h         Show this");
+	stderr("Options when gooi'ing:");
 	stderr("  -c         Copy the link to the clipboard");
 	stderr("  -q         Only print the URL");
 	stderr("  -n <name>  Use the given name for the uploaded file instead of the default")
-	stderr("  -h         Show this");
 	process.exit(code);
 }
 
@@ -58,13 +59,21 @@ if(fnames.length==0){
 	usageandexit(1);
 }
 
-gooi.gooi(fnames, {uploadFname: uploadFname}).then(r => {
-	console.log(r);
+if (fnames[0] === 'vang') {
+	gooi.vang(fnames[1]).then(r => {
+		r.pipe(process.stdout);
+	}).catch(e => {
+		stderr('error while downloading:', e);
+	});
+} else {
+	gooi.gooi(fnames, {uploadFname: uploadFname}).then(r => {
+		console.log(r);
 
-	if(opts.c){
-		toClipboard.sync(r.trim());
-		if(!opts.q)stderr('(copied)');
-	}
-}).catch(e => {
-	stderr('error while uploading:', e);
-});
+		if(opts.c){
+			toClipboard.sync(r.trim());
+			if(!opts.q)stderr('(copied)');
+		}
+	}).catch(e => {
+		stderr('error while uploading:', e);
+	});
+}
