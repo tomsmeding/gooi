@@ -79,7 +79,7 @@ app.post("/gooi/:fname",(req,res)=>{
 	req.on("end",function(){
 		fs.writeFileSync(`${FILES_DIRNAME}/${id}-fname`,fname);
 		res.writeHead(200);
-		res.end(`https://${HTTPHOST}/vang/${id}\n`);
+		res.end(`https://${HTTPHOST}/vang/${id}/${encodeURIComponent(fname)}\n`);
 	});
 	req.on("error",function(e){
 		console.log(e);
@@ -97,7 +97,18 @@ app.get("/vang/:id",(req,res)=>{
 		return;
 	}
 	const fname=fs.readFileSync(`${FILES_DIRNAME}/${id}-fname`).toString();
-	const fnamequo=`"${fname}"`;
+
+	res.redirect(302, `/vang/${id}/${encodeURIComponent(fname)}`);
+});
+
+app.get("/vang/:id/:fname",(req,res)=>{
+	const id=req.params.id.replace(/[^0-9a-z]/g,"").substr(0,10);
+	if(!fs.existsSync(`${FILES_DIRNAME}/${id}`)||!fs.existsSync(`${FILES_DIRNAME}/${id}-fname`)){
+		res.writeHead(404);
+		res.end("404 not found");
+		return;
+	}
+	const fname=decodeURIComponent(req.params.fname);
 
 	let filedesc=null;
 	let stats=null;
@@ -112,9 +123,7 @@ app.get("/vang/:id",(req,res)=>{
 		return;
 	}
 	res.writeHead(200,{
-		"Content-Type":"application/octet-stream",
 		"Content-Length":stats.size.toString(),
-		"Content-Disposition":`attachment; filename=${fnamequo}`
 	});
 	fs.createReadStream(null,{fd:filedesc}).pipe(res);
 	res.on("error",function(e){
