@@ -79,7 +79,7 @@ app.post("/gooi/:fname",(req,res)=>{
 	req.on("end",function(){
 		fs.writeFileSync(`${FILES_DIRNAME}/${id}-fname`,fname);
 		res.writeHead(200);
-		res.end(`https://${HTTPHOST}/vang/${id}/${encodeURI(fname)}\n`);
+		res.end(`https://${HTTPHOST}/vang/${id}/${encodeURIComponent(fname)}\n`);
 	});
 	req.on("error",function(e){
 		console.log(e);
@@ -98,7 +98,7 @@ app.get("/vang/:id",(req,res)=>{
 	}
 	const fname=fs.readFileSync(`${FILES_DIRNAME}/${id}-fname`).toString();
 
-	res.redirect(302, `/vang/${id}/${encodeURI(fname)}`);
+	res.redirect(302, `/vang/${id}/${encodeURIComponent(fname)}`);
 });
 
 app.get("/vang/:id/:fname",(req,res)=>{
@@ -108,7 +108,7 @@ app.get("/vang/:id/:fname",(req,res)=>{
 		res.end("404 not found");
 		return;
 	}
-	const fname=decodeURI(req.params.fname);
+	const fname=decodeURIComponent(req.params.fname);
 
 	let filedesc=null;
 	let stats=null;
