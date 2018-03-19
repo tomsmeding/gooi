@@ -5,6 +5,7 @@ const fs=require("fs");
 const path=require("path");
 const util=require("util");
 const yazl=require("yazl");
+const fetch=require("node-fetch");
 
 function upload(gooi,stream,filename,callback){
 	let req=https.request({
@@ -12,7 +13,7 @@ function upload(gooi,stream,filename,callback){
 		hostname:gooi.hostname,
 		port:gooi.port,
 		method:"POST",
-		path:`${gooi.prefix}${encodeURIComponent(filename)}`,
+		path:`${gooi.uploadPrefix}${encodeURIComponent(filename)}`,
 		headers:{
 			"Content-Type":"application/octet-stream",
 			"Transfer-Encoding":"chunked"
@@ -71,10 +72,11 @@ function makeFilenameSafe(fname){
 }
 
 module.exports = class Gooi {
-	constructor(hostname, port, prefix) {
+	constructor(hostname, port, downloadPrefix, uploadPrefix) {
 		this.hostname = hostname;
 		this.port = port;
-		this.prefix = prefix;
+		this.downloadPrefix = downloadPrefix;
+		this.uploadPrefix = uploadPrefix;
 	}
 
 	gooi(fnames, params = {}) {
@@ -104,6 +106,7 @@ module.exports = class Gooi {
 	}
 
 	vang(id) {
-		// TODO
+		const url = `https://${this.hostname}:${this.port}${this.downloadPrefix}${id}`;
+		return fetch(url).then(res => res.body);
 	}
 }
