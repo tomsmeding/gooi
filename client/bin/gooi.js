@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 "use strict";
 
-const Gooi=require('../main.js'),
-      toClipboard=require("to-clipboard");
-
-const gooi = new Gooi("tomsmeding.com", 443, '/gooi/');
+const Gooi=require('../main.js');
+const toClipboard=require("to-clipboard");
+const path=require('path');
+const fs=require('fs');
 
 function stderr(/* strings */) {
 	const args = Array.prototype.slice.call(arguments);
@@ -20,6 +20,19 @@ function usageandexit(code){
 	stderr("  -h         Show this");
 	process.exit(code);
 }
+
+const configsDir = process.env['XDG_CONFIG_HOME'] || `${process.env['HOME']}/.config/`;
+const configFile = path.join(configsDir, 'gooi', 'config.json');
+const config = require(configFile);
+
+if (config.url == null) {
+	stderr('config: url required');
+	process.exit(1);
+}
+config.port = config.port || 443;
+config.prefix = config.prefix || '/gooi/';
+
+const gooi = new Gooi(config.url, config.port, config.prefix);
 
 let opts={};
 let fnames=[];
