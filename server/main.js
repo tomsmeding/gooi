@@ -7,9 +7,12 @@ const fs=require("fs"),
       mkdirp=require("mkdirp"),
       httpServer=http.Server(app);
 
-const HTTPHOST="tomsmeding.com";
-const HTTPPORT=11056;
-const FILES_DIRNAME="files";
+const HTTPHOST = process.env['GOOI_HTTP_HOST'];
+const HTTPPORT = Number.parseInt(process.env['GOOI_HTTP_PORT']||'8080', 10);
+const FILES_DIRNAME = process.env['GOOI_FILES_DIR'] || "files";
+if (HTTPHOST == '') {
+	throw new Error("GOOI_HTTP_HOST env var can't be empty");
+}
 
 const uniqid=(()=>{
 	let i=0;
