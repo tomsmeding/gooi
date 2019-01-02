@@ -17,6 +17,7 @@ function usageandexit(code){
 	stderr("  -c         Copy the link to the clipboard");
 	stderr("  -q         Only print the URL");
 	stderr("  -n <name>  Use the given name for the uploaded file instead of the default")
+	stderr("  -t         Trim filename from the given URL")
 	stderr("  -h         Show this");
 	process.exit(code);
 }
@@ -49,7 +50,7 @@ for(let i=2;i<process.argv.length;i++){
 		continue;
 	}
 	for(let j=1;j<arg.length;j++){
-		if("chnq".indexOf(arg[j])==-1){
+		if("chnqt".indexOf(arg[j])==-1){
 			stderr(`Unrecognised flag '${arg[j]}'`);
 			usageandexit(1);
 		}
@@ -71,11 +72,16 @@ if(fnames.length==0){
 	usageandexit(1);
 }
 
-gooi.gooi(fnames, {uploadFname: uploadFname}).then(r => {
-	console.log(r);
+gooi.gooi(fnames, {uploadFname: uploadFname}).then(url => {
+	const matchSlug = /\/[^\/]*$/;
+	if (opts.t) {
+		url = url.replace(matchSlug, '');
+	}
+
+	console.log(url);
 
 	if(opts.c){
-		toClipboard.sync(r.trim());
+		toClipboard.sync(url.trim());
 		if(!opts.q)stderr('(copied)');
 	}
 }).catch(e => {
