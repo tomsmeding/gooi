@@ -14,6 +14,8 @@ if (HTTPHOST == '') {
 	throw new Error("GOOI_HTTP_HOST env var can't be empty");
 }
 
+const HOURS_RETENTION = Number.parseInt(process.env['GOOI_HOURS_RETENTION']||'24', 10);
+
 const uniqid=(()=>{
 	let i=0;
 	return ()=>i=(i+1)%4294967291; //last prime under 2^32
@@ -50,7 +52,7 @@ setInterval(()=>{
 		try {
 			const stats=fs.statSync(path);
 			if(!stats.isFile())continue;
-			if(nowtime-stats.mtime.getTime()>24*3600*1000){ //24 hour storage
+			if(nowtime-stats.mtime.getTime()>HOURS_RETENTION*3600*1000){
 				fs.unlinkSync(path);
 				fs.unlinkSync(path+"-fname");
 			}
