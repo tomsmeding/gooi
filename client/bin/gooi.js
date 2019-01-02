@@ -73,9 +73,8 @@ if(fnames.length==0){
 }
 
 gooi.gooi(fnames, {uploadFname: uploadFname}).then(url => {
-	const matchSlug = /\/[^\/]*$/;
 	if (opts.t) {
-		url = url.replace(matchSlug, '');
+		url = url.replace(/\/[^\/]*$/, '');
 	}
 
 	console.log(url);
