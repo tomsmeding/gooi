@@ -60,6 +60,18 @@ setInterval(()=>{
 	}
 },3600*1000); //every hour
 
+const idMiddleware = function (req, res, next) {
+	const id=req.params.id.replace(/[^0-9a-z]/g,"").substr(0,10);
+	if(!fs.existsSync(`${FILES_DIRNAME}/${id}`)||!fs.existsSync(`${FILES_DIRNAME}/${id}-fname`)){
+		res.writeHead(404);
+		res.end("404 not found");
+		return;
+	}
+
+	req.id = id;
+	next();
+}
+
 app.post("/gooi/:fname",(req,res)=>{
 	const fname=req.params.fname.replace(/[\0-\x1f\x7f-\xff\/"\\]/g,"");
 	if(fname.length==0){
@@ -92,31 +104,20 @@ app.post("/gooi/:fname",(req,res)=>{
 	});
 });
 
-app.get("/vang/:id",(req,res)=>{
-	const id=req.params.id.replace(/[^0-9a-z]/g,"").substr(0,10);
-	if(!fs.existsSync(`${FILES_DIRNAME}/${id}`)||!fs.existsSync(`${FILES_DIRNAME}/${id}-fname`)){
-		res.writeHead(404);
-		res.end("404 not found");
-		return;
-	}
-	const fname=fs.readFileSync(`${FILES_DIRNAME}/${id}-fname`).toString();
+app.get('/vang/:id*', idMiddleware);
 
-	res.redirect(302, `/vang/${id}/${encodeURIComponent(fname)}`);
+app.get("/vang/:id",(req,res)=>{
+	const fname=fs.readFileSync(`${FILES_DIRNAME}/${req.id}-fname`).toString();
+	res.redirect(302, `/vang/${req.id}/${encodeURIComponent(fname)}`);
 });
 
 app.get("/vang/:id/:fname",(req,res)=>{
-	const id=req.params.id.replace(/[^0-9a-z]/g,"").substr(0,10);
-	if(!fs.existsSync(`${FILES_DIRNAME}/${id}`)||!fs.existsSync(`${FILES_DIRNAME}/${id}-fname`)){
-		res.writeHead(404);
-		res.end("404 not found");
-		return;
-	}
 	const fname=decodeURIComponent(req.params.fname);
 
 	let filedesc=null;
 	let stats=null;
 	try {
-		const datafname=`${FILES_DIRNAME}/${id}`;
+		const datafname=`${FILES_DIRNAME}/${req.id}`;
 		filedesc=fs.openSync(datafname,"r");
 		stats=fs.statSync(datafname);
 	} catch(e){
@@ -134,16 +135,9 @@ app.get("/vang/:id/:fname",(req,res)=>{
 	});
 });
 
-app.post("/houvast/:id",(req,res)=>{
-	const id=req.params.id.replace(/[^0-9a-z]/g,"").substr(0,10);
-	if(!fs.existsSync(`${FILES_DIRNAME}/${id}`)||!fs.existsSync(`${FILES_DIRNAME}/${id}-fname`)){
-		res.writeHead(404);
-		res.end("404 not found");
-		return;
-	}
-
+app.post("/houvast/:id", idMiddleware, (req,res)=>{
 	try {
-		let fd=fs.openSync(`${FILES_DIRNAME}/${id}`,"a");
+		let fd=fs.openSync(`${FILES_DIRNAME}/${req.id}`,"a");
 		const now=new Date();
 		fs.futimesSync(fd,now,now);
 		fs.closeSync(fd);
