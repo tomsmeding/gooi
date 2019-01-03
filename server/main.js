@@ -43,24 +43,26 @@ const genidcode=(()=>{
 	}
 })();
 
-setInterval(()=>{
-	const dirlist=fs.readdirSync(FILES_DIRNAME);
-	const nowtime=new Date().getTime();
-	for(let file of dirlist){
-		if(file.slice(-6)=="-fname"||file=="startid")continue;
-		const path=`${FILES_DIRNAME}/${file}`;
-		try {
-			const stats=fs.statSync(path);
-			if(!stats.isFile())continue;
-			if(nowtime-stats.mtime.getTime()>HOURS_RETENTION*3600*1000){
-				fs.unlinkSync(path);
-				fs.unlinkSync(path+"-fname");
+if (HOURS_RETENTION > 0) {
+	setInterval(()=>{
+		const dirlist=fs.readdirSync(FILES_DIRNAME);
+		const nowtime=new Date().getTime();
+		for(let file of dirlist){
+			if(file.slice(-6)=="-fname"||file=="startid")continue;
+			const path=`${FILES_DIRNAME}/${file}`;
+			try {
+				const stats=fs.statSync(path);
+				if(!stats.isFile())continue;
+				if(nowtime-stats.mtime.getTime()>HOURS_RETENTION*3600*1000){
+					fs.unlinkSync(path);
+					fs.unlinkSync(path+"-fname");
+				}
+			} catch(e){
+				console.log(`[cleanup] Couldn't process '${path}': ${e.message}`);
 			}
-		} catch(e){
-			console.log(`[cleanup] Couldn't process '${path}': ${e.message}`);
 		}
-	}
-},3600*1000); //every hour
+	},3600*1000); //every hour
+}
 
 const idMiddleware = function (req, res, next) {
 	const id=req.params.id.replace(/[^0-9a-z]/g,"").substr(0,10);
