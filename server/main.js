@@ -48,6 +48,8 @@ if (HOURS_RETENTION > 0) {
 	setInterval(() => {
 		const dirlist = fs.readdirSync(FILES_DIRNAME);
 		const nowtime = new Date().getTime();
+		let count = 0;
+
 		for (const file of dirlist) {
 			if (file.slice(-6) == "-fname" || file == "startid") continue;
 			const path = `${FILES_DIRNAME}/${file}`;
@@ -57,11 +59,14 @@ if (HOURS_RETENTION > 0) {
 				if (nowtime-stats.mtime.getTime() > HOURS_RETENTION*3600*1000) {
 					fs.unlinkSync(path);
 					fs.unlinkSync(path + "-fname");
+					count++;
 				}
 			} catch (e) {
 				console.log(`[cleanup] Couldn't process '${path}': ${e.message}`);
 			}
 		}
+
+		console.log(`[cleanup] Removed ${count} file(s)`);
 	}, 3600*1000); //every hour
 }
 
