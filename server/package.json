@@ -19,6 +19,8 @@
 	"license": "MIT",
 	"dependencies": {
 		"express": "^4.16.4",
-		"mkdirp": "^0.5.1"
+		"file-type": "^10.7.0",
+		"mkdirp": "^0.5.1",
+		"read-chunk": "^3.0.0"
 	}
 }

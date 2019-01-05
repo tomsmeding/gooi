@@ -64,6 +64,16 @@ if (HOURS_RETENTION > 0) {
 	},3600*1000); //every hour
 }
 
+function getMime (fname) {
+	const readChunk = require('read-chunk');
+	const fileType = require('file-type');
+
+	const buffer = readChunk.sync(fname, 0, fileType.minimumBytes);
+	const res = fileType(buffer);
+
+	return res && res.mime;
+};
+
 const idMiddleware = function (req, res, next) {
 	const id=req.params.id.replace(/[^0-9a-z]/g,"").substr(0,10);
 	if(!fs.existsSync(`${FILES_DIRNAME}/${id}`)||!fs.existsSync(`${FILES_DIRNAME}/${id}-fname`)){
@@ -115,11 +125,11 @@ app.get("/vang/:id", idMiddleware, (req,res)=>{
 
 app.get("/vang/:id/:fname", idMiddleware, (req,res)=>{
 	const fname=decodeURIComponent(req.params.fname);
+	const datafname=`${FILES_DIRNAME}/${req.id}`;
 
 	let filedesc=null;
 	let stats=null;
 	try {
-		const datafname=`${FILES_DIRNAME}/${req.id}`;
 		filedesc=fs.openSync(datafname,"r");
 		stats=fs.statSync(datafname);
 	} catch(e){
@@ -128,9 +138,13 @@ app.get("/vang/:id/:fname", idMiddleware, (req,res)=>{
 		res.end("Could not open file\n");
 		return;
 	}
+
+	const mime = getMime(datafname) || 'application/unknown';
 	res.writeHead(200,{
 		"Content-Length":stats.size.toString(),
+		"Content-Type":`${mime}; charset=utf-8`,
 	});
+
 	fs.createReadStream(null,{fd:filedesc}).pipe(res);
 	res.on("error",function(e){
 		console.log(e);
