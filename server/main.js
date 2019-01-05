@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 "use strict";
 
-const fs=require("fs"),
-      http=require("http"),
-      app=require("express")(),
-      mkdirp=require("mkdirp"),
-      httpServer=http.Server(app);
+const fs=require("fs");
+const http=require("http");
+const app=require("express")();
+const mkdirp=require("mkdirp");
+const fileType=require("file-type");
+const httpServer=http.Server(app);
 
 const HTTPHOST = process.env['GOOI_HTTP_HOST'];
 const HTTPPORT = Number.parseInt(process.env['GOOI_HTTP_PORT']||'8080', 10);
@@ -64,11 +65,15 @@ if (HOURS_RETENTION > 0) {
 	},3600*1000); //every hour
 }
 
-function getMime (fname) {
-	const readChunk = require('read-chunk');
-	const fileType = require('file-type');
+function getMime(filedesc) {
+	const buffer = Buffer.alloc(fileType.minimumBytes);
 
-	const buffer = readChunk.sync(fname, 0, fileType.minimumBytes);
+	try {
+		fs.readSync(filedesc, buffer, 0, fileType.minimumBytes, 0);
+	} catch (e) {
+		return null;
+	}
+
 	const res = fileType(buffer);
 
 	return res && res.mime;
@@ -139,7 +144,7 @@ app.get("/vang/:id/:fname", idMiddleware, (req,res)=>{
 		return;
 	}
 
-	const mime = getMime(datafname) || 'application/unknown';
+	const mime = getMime(filedesc) || 'application/unknown';
 	res.writeHead(200,{
 		"Content-Length":stats.size.toString(),
 		"Content-Type":`${mime}; charset=utf-8`,
