@@ -1,4 +1,5 @@
-const fileType=require("file-type");
+const fs = require("fs");
+const fileType = require("file-type");
 
 // Returns true if the buffer can be the initial part of a valid utf-8 encoded string
 function validUTF8Head(buf) {
@@ -24,6 +25,7 @@ function getMime(filedesc) {
 	try {
 		fs.readSync(filedesc, buffer, 0, fileType.minimumBytes, 0);
 	} catch (e) {
+		console.log(e);
 		return null;
 	}
 
