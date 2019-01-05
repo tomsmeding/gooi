@@ -115,12 +115,10 @@ app.get("/vang/:id", idMiddleware, (req,res)=>{
 });
 
 app.get("/vang/:id/:fname", idMiddleware, (req,res)=>{
-	const fname=decodeURIComponent(req.params.fname);
-	const datafname=`${FILES_DIRNAME}/${req.id}`;
-
 	let filedesc=null;
 	let stats=null;
 	try {
+		const datafname=`${FILES_DIRNAME}/${req.id}`;
 		filedesc=fs.openSync(datafname,"r");
 		stats=fs.statSync(datafname);
 	} catch(e){
