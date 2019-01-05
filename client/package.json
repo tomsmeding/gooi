@@ -1,6 +1,6 @@
 {
 	"name": "gooi",
-	"version": "0.0.2",
+	"version": "1.0.0",
 	"description": "Transfer files with gooi",
 	"main": "main.js",
 	"scripts": {
@@ -14,7 +14,11 @@
 		"transmit",
 		"client"
 	],
-	"author": "Tom Smeding <hallo@tomsmeding.nl> (http://tomsmeding.com)",
+	"author": "Tom Smeding <tom.smeding@gmail.com> (https://tomsmeding.com)",
+	"contributors": [
+		"Tom Smeding <tom.smeding@gmail.com> (https://tomsmeding.com)",
+		"Lieuwe Rooijakkers <lieuwerooijakkers@gmail.com> (https://www.lieuwe.xyz)"
+	],
 	"license": "MIT",
 	"dependencies": {
 		"to-clipboard": "^0.4.0",
