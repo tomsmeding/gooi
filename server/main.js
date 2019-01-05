@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 "use strict";
 
-const fs=require("fs"),
-      http=require("http"),
-      app=require("express")(),
-      mkdirp=require("mkdirp"),
-      httpServer=http.Server(app);
+const fs=require("fs");
+const http=require("http");
+const app=require("express")();
+const mkdirp=require("mkdirp");
+const httpServer=http.Server(app);
+const getMime=require('./mime.js');
 
 const HTTPHOST = process.env['GOOI_HTTP_HOST'] || '';
 const HTTPPORT = Number.parseInt(process.env['GOOI_HTTP_PORT']||'8080', 10);
@@ -115,11 +116,11 @@ app.get("/vang/:id", idMiddleware, (req,res)=>{
 
 app.get("/vang/:id/:fname", idMiddleware, (req,res)=>{
 	const fname=decodeURIComponent(req.params.fname);
+	const datafname=`${FILES_DIRNAME}/${req.id}`;
 
 	let filedesc=null;
 	let stats=null;
 	try {
-		const datafname=`${FILES_DIRNAME}/${req.id}`;
 		filedesc=fs.openSync(datafname,"r");
 		stats=fs.statSync(datafname);
 	} catch(e){
@@ -128,9 +129,13 @@ app.get("/vang/:id/:fname", idMiddleware, (req,res)=>{
 		res.end("Could not open file\n");
 		return;
 	}
+
+	const mime = getMime(filedesc) || 'application/unknown';
 	res.writeHead(200,{
 		"Content-Length":stats.size.toString(),
+		"Content-Type":`${mime}; charset=utf-8`,
 	});
+
 	fs.createReadStream(null,{fd:filedesc}).pipe(res);
 	res.on("error",function(e){
 		console.log(e);
