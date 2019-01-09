@@ -6,34 +6,41 @@ const path = require("path");
 const util = require("util");
 const yazl = require("yazl");
 
-function upload(gooi, stream, filename, callback) {
-	let req = https.request({
-		protocol: "https:",
-		hostname: gooi.hostname,
-		port: gooi.port,
-		method: "POST",
-		path: `${gooi.prefix}${encodeURIComponent(filename)}`,
-		headers: {
-			"Content-Type": "application/octet-stream",
-			"Transfer-Encoding": "chunked",
-		}
-	}, (res) => {
-		const success = res.statusCode == 200;
-		if (!success) callback(res, null);
-		res.setEncoding("utf8");
-		let bodytext = "";
-		res.on("data", (data) => {
-			if (success) bodytext += data;
-		});
-		res.on("end", () => {
-			if (success) callback(null, bodytext.trim());
-		});
-	});
-	req.on("error", (e) => {
-		callback(e, null);
-	});
+function upload(gooi, stream, filename) {
+	return new Promise((resolve, reject) => {
+		const callback = (e, r) => {
+			if (e != null) reject(e);
+			else resolve(r);
+		};
 
-	stream.pipe(req);
+		let req = https.request({
+			protocol: "https:",
+			hostname: gooi.hostname,
+			port: gooi.port,
+			method: "POST",
+			path: `${gooi.prefix}${encodeURIComponent(filename)}`,
+			headers: {
+				"Content-Type": "application/octet-stream",
+				"Transfer-Encoding": "chunked",
+			}
+		}, (res) => {
+			const success = res.statusCode == 200;
+			if (!success) callback(res, null);
+			res.setEncoding("utf8");
+			let bodytext = "";
+			res.on("data", (data) => {
+				if (success) bodytext += data;
+			});
+			res.on("end", () => {
+				if (success) callback(null, bodytext.trim());
+			});
+		});
+		req.on("error", (e) => {
+			callback(e, null);
+		});
+
+		stream.pipe(req);
+	});
 }
 
 function enumerateFiles(fnames) {
@@ -56,15 +63,14 @@ function enumerateFiles(fnames) {
 	return res.map((f) => [ path.normalize(f[0]), f[1] ]);
 }
 
-function createZipStream(basename, fnames, cb) {
+function createZipStream(basename, fnames, fn) {
 	const zipfile = new yazl.ZipFile();
 	for (let file of fnames) {
 		zipfile.addFile(file[0], basename + "/" + file[1]);
 	}
-	process.nextTick(() => {
-		zipfile.end();
-	});
-	cb(zipfile.outputStream);
+	zipfile.end();
+
+	return zipfile.outputStream;
 }
 
 function makeFilenameSafe(fname) {
@@ -78,30 +84,29 @@ module.exports = class Gooi {
 		this.prefix = prefix;
 	}
 
-	gooi(fnames, params = {}) {
-		return new Promise((resolve, reject) => {
-			const callback = (e, r) => {
-				if (e != null) reject(e);
-				else resolve(r);
-			};
+	async gooi(fnames, params = {}) {
+		if (fnames == null || fnames.length == 0) {
+			throw new Error("No files to gooi");
+		} else if (!Array.isArray(fnames)) {
+			fnames = [ fnames ];
+		}
 
-			if (fnames.length == 0) {
-				reject(new Error("No files to gooi"));
-				return;
-			}
-
-			if (fnames.length != 1 || !fs.statSync(fnames[0]).isFile()) {
-				let zipname = params.uploadFname;
-				if (zipname == null) zipname = new Date().getTime().toString() + ".zip";
-				else zipname = makeFilenameSafe(zipname);
-				const zipbase = zipname.replace(/\.zip$/, "");
-				const enumf = enumerateFiles(fnames);
-				createZipStream(zipbase, enumf, (stream) => upload(this, stream, zipname, callback));
-			} else {
-				if (params.uploadFname == null) params.uploadFname = fnames[0];
-				upload(this, fs.createReadStream(fnames[0]), makeFilenameSafe(params.uploadFname), callback);
-			}
-		});
+		if (fnames.length != 1 || !fs.statSync(fnames[0]).isFile()) {
+			let zipname = params.uploadFname;
+			if (zipname == null) zipname = new Date().getTime().toString() + ".zip";
+			else zipname = makeFilenameSafe(zipname);
+			const zipbase = zipname.replace(/\.zip$/, "");
+			const enumf = enumerateFiles(fnames);
+			const stream  = createZipStream(zipbase, enumf);
+			return await upload(this, stream, zipname);
+		} else {
+			if (params.uploadFname == null) params.uploadFname = fnames[0];
+			return await upload(
+				this,
+				fs.createReadStream(fnames[0]),
+				makeFilenameSafe(params.uploadFname)
+			);
+		}
 	}
 
 	vang(id) {
