@@ -63,7 +63,7 @@ function enumerateFiles(fnames) {
 	return res.map((f) => [ path.normalize(f[0]), f[1] ]);
 }
 
-function createZipStream(basename, fnames, fn) {
+function createZipStream(basename, fnames) {
 	const zipfile = new yazl.ZipFile();
 	for (let file of fnames) {
 		zipfile.addFile(file[0], basename + "/" + file[1]);
