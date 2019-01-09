@@ -6,19 +6,14 @@ const toClipboard = require("to-clipboard");
 const path = require('path');
 const fs = require('fs');
 
-function stderr(/* strings */) {
-	const args = Array.prototype.slice.call(arguments);
-	process.stderr.write(args.join(' ') + '\n');
-}
-
 function usageandexit(code) {
-	stderr("Usage: gooi [-cqh] <file>");
-	stderr("Uploads the given file and provides a handy, short-lived, shareable download link.");
-	stderr("  -c         Copy the link to the clipboard");
-	stderr("  -q         Only print the URL");
-	stderr("  -n <name>  Use the given name for the uploaded file instead of the default")
-	stderr("  -t         Trim filename from the given URL")
-	stderr("  -h         Show this");
+	console.error("Usage: gooi [-cqh] <file>");
+	console.error("Uploads the given file and provides a handy, short-lived, shareable download link.");
+	console.error("  -c         Copy the link to the clipboard");
+	console.error("  -q         Only print the URL");
+	console.error("  -n <name>  Use the given name for the uploaded file instead of the default")
+	console.error("  -t         Trim filename from the given URL")
+	console.error("  -h         Show this");
 	process.exit(code);
 }
 
@@ -27,7 +22,7 @@ const configFile = path.join(configsDir, 'gooi', 'config.json');
 const config = require(configFile);
 
 if (config.url == null) {
-	stderr('config: url required');
+	console.error('config: url required');
 	process.exit(1);
 }
 config.port = config.port || 443;
@@ -51,12 +46,12 @@ for (let i = 2; i < process.argv.length; i++) {
 	}
 	for (let j = 1; j < arg.length; j++) {
 		if ("chnqt".indexOf(arg[j]) == -1) {
-			stderr(`Unrecognised flag '${arg[j]}'`);
+			console.error(`Unrecognised flag '${arg[j]}'`);
 			usageandexit(1);
 		}
 		if (arg[j] == "n") {
 			if (i == process.argv.length - 1) {
-				stderr("File name expected after '-n'");
+				console.error("File name expected after '-n'");
 				process.exit(1);
 			}
 			uploadFname = process.argv[i + 1];
@@ -68,7 +63,7 @@ for (let i = 2; i < process.argv.length; i++) {
 }
 if (opts.h) usageandexit(0);
 if (fnames.length == 0) {
-	stderr("No filename given!");
+	console.error("No filename given!");
 	usageandexit(1);
 }
 
@@ -83,8 +78,8 @@ gooi.gooi(fnames, {
 
 	if (opts.c) {
 		toClipboard.sync(url.trim());
-		if (!opts.q) stderr('(copied)');
+		if (!opts.q) console.error('(copied)');
 	}
 }).catch(e => {
-	stderr('error while uploading:', e);
+	console.error('error while uploading:', e);
 });

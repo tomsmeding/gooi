@@ -25,7 +25,7 @@ function getMime(filedesc) {
 	try {
 		fs.readSync(filedesc, buffer, 0, fileType.minimumBytes, 0);
 	} catch (e) {
-		console.log(e);
+		console.error(e);
 		return null;
 	}
 

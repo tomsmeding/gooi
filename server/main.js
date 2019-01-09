@@ -62,7 +62,7 @@ if (HOURS_RETENTION > 0) {
 					count++;
 				}
 			} catch (e) {
-				console.log(`[cleanup] Couldn't process '${path}': ${e.message}`);
+				console.error(`[cleanup] Couldn't process '${path}': ${e.message}`);
 			}
 		}
 
@@ -95,7 +95,7 @@ app.post("/gooi/:fname", (req, res) => {
 	try {
 		fd = fs.openSync(`${FILES_DIRNAME}/${id}`, "w");
 	} catch (e) {
-		console.log(e);
+		console.error(e);
 		res.writeHead(500);
 		res.end("Could not open file to write to\n");
 		return;
@@ -108,7 +108,7 @@ app.post("/gooi/:fname", (req, res) => {
 		res.end(`https://${HTTPHOST}/vang/${id}/${encodeURIComponent(fname)}\n`);
 	});
 	req.on("error", function(e) {
-		console.log(e);
+		console.error(e);
 		res.writeHead(500);
 		res.end("Error while writing file\n");
 		try {
@@ -130,7 +130,7 @@ app.get("/vang/:id/:fname", idMiddleware, (req, res) => {
 		filedesc = fs.openSync(datafname, "r");
 		stats = fs.statSync(datafname);
 	} catch (e) {
-		console.log(e);
+		console.error(e);
 		res.writeHead(500);
 		res.end("Could not open file\n");
 		return;
@@ -146,7 +146,7 @@ app.get("/vang/:id/:fname", idMiddleware, (req, res) => {
 		fd: filedesc,
 	}).pipe(res);
 	res.on("error", function(e) {
-		console.log(e);
+		console.error(e);
 	});
 });
 
@@ -157,7 +157,7 @@ app.post("/houvast/:id", idMiddleware, (req, res) => {
 		fs.futimesSync(fd, now, now);
 		fs.closeSync(fd);
 	} catch (e) {
-		console.log(e);
+		console.error(e);
 		res.writeHead(500);
 		res.end("Could not open file\n");
 		return;
