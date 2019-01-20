@@ -1,5 +1,6 @@
 const fs = require("fs");
 const fileType = require("file-type");
+const Mime = require('mime/lite');
 
 // Returns true if the buffer can be the initial part of a valid utf-8 encoded string
 function validUTF8Head(buf) {
@@ -19,7 +20,10 @@ function validUTF8Head(buf) {
 	return true;
 }
 
-function getMime(filedesc) {
+function getMime(filename, filedesc) {
+	const mime = Mime.getType(filename);
+	if (mime != null) return mime;
+
 	const buffer = Buffer.alloc(fileType.minimumBytes);
 
 	try {

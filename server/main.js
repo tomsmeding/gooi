@@ -136,7 +136,7 @@ app.get("/vang/:id/:fname", idMiddleware, (req, res) => {
 		return;
 	}
 
-	const mime = getMime(filedesc) || 'application/unknown';
+	const mime = getMime(req.params.fname, filedesc) || 'application/unknown';
 	res.writeHead(200, {
 		"Content-Length": stats.size.toString(),
 		"Content-Type": `${mime}; charset=utf-8`,
