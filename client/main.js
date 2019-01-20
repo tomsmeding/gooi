@@ -91,7 +91,7 @@ module.exports = class Gooi {
 			fnames = [ fnames ];
 		}
 
-		if (fnames.length != 1 || !fs.statSync(fnames[0]).isFile()) {
+		if (fnames.length != 1 || fs.statSync(fnames[0]).isDirectory()) {
 			let zipname = params.uploadFname;
 			if (zipname == null) zipname = new Date().getTime().toString() + ".zip";
 			else zipname = makeFilenameSafe(zipname);
