@@ -21,14 +21,21 @@ const configsDir = process.env['XDG_CONFIG_HOME'] || `${process.env['HOME']}/.co
 const configFile = path.join(configsDir, 'gooi', 'config.json');
 const config = require(configFile);
 
-if (config.url == null) {
-	console.error('config: url required');
+if (config.url != null) {
+	console.warn('config: "url" is deprecated, please use "hostname"');
+	if (config.hostname == null) {
+		config.hostname = config.url;
+		delete config.url;
+	}
+}
+if (config.hostname == null) {
+	console.error('config: hostname required');
 	process.exit(1);
 }
 config.port = config.port || 443;
 config.prefix = config.prefix || '/gooi/';
 
-const gooi = new Gooi(config.url, config.port, config.prefix);
+const gooi = new Gooi(config.hostname, config.port, config.prefix);
 
 let opts = {};
 let fnames = [];
