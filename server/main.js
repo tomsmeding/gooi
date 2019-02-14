@@ -11,7 +11,7 @@ const getMime = require('./mime.js');
 const HTTPHOST = process.env['GOOI_HTTP_HOST'] || '';
 const HTTPPORT = Number.parseInt(process.env['GOOI_HTTP_PORT']||'8080', 10);
 const FILES_DIRNAME = process.env['GOOI_FILES_DIR'] || "files";
-if (HTTPHOST == '') {
+if (HTTPHOST === '') {
 	throw new Error("GOOI_HTTP_HOST env var can't be empty");
 }
 
@@ -51,7 +51,7 @@ if (HOURS_RETENTION > 0) {
 		let count = 0;
 
 		for (const file of dirlist) {
-			if (file.slice(-6) == "-fname" || file == "startid") continue;
+			if (file.slice(-6) === "-fname" || file === "startid") continue;
 			const path = `${FILES_DIRNAME}/${file}`;
 			try {
 				const stats = fs.statSync(path);
