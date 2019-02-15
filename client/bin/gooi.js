@@ -4,10 +4,9 @@
 const Gooi = require('../main.js');
 const toClipboard = require("to-clipboard");
 const path = require('path');
-const fs = require('fs');
 
 function usageandexit(code) {
-	console.error("Usage: gooi [-cqh] <file>");
+	console.error("Usage: gooi [flags...] <file>");
 	console.error("Uploads the given file and provides a handy, short-lived, shareable download link.");
 	console.error("  -c         Copy the link to the clipboard");
 	console.error("  -q         Only print the URL");
@@ -37,8 +36,8 @@ config.prefix = config.prefix || '/gooi/';
 
 const gooi = new Gooi(config.hostname, config.port, config.prefix);
 
-let opts = {};
-let fnames = [];
+const opts = {};
+const fnames = [];
 let uploadFname = null;
 let skipnextarg = false;
 for (let i = 2; i < process.argv.length; i++) {
@@ -47,17 +46,17 @@ for (let i = 2; i < process.argv.length; i++) {
 		continue;
 	}
 	const arg = process.argv[i];
-	if (arg[0] != '-') {
+	if (arg[0] !== '-') {
 		fnames.push(arg);
 		continue;
 	}
 	for (let j = 1; j < arg.length; j++) {
-		if ("chnqt".indexOf(arg[j]) == -1) {
+		if ("chnqt".indexOf(arg[j]) === -1) {
 			console.error(`Unrecognised flag '${arg[j]}'`);
 			usageandexit(1);
 		}
-		if (arg[j] == "n") {
-			if (i == process.argv.length - 1) {
+		if (arg[j] === "n") {
+			if (i === process.argv.length - 1) {
 				console.error("File name expected after '-n'");
 				process.exit(1);
 			}
@@ -69,7 +68,7 @@ for (let i = 2; i < process.argv.length; i++) {
 	}
 }
 if (opts.h) usageandexit(0);
-if (fnames.length == 0) {
+if (fnames.length === 0) {
 	console.error("No filename given!");
 	usageandexit(1);
 }
@@ -78,7 +77,7 @@ gooi.gooi(fnames, {
 	uploadFname: uploadFname,
 }).then(url => {
 	if (opts.t) {
-		url = url.replace(/\/[^\/]*$/, '');
+		url = url.replace(/\/[^/]*$/, '');
 	}
 
 	console.log(url);
