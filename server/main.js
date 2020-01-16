@@ -3,6 +3,7 @@
 
 const fs = require("fs");
 const http = require("http");
+const crypto = require("crypto");
 const app = require("express")();
 const mkdirp = require("mkdirp");
 const httpServer = http.Server(app);
@@ -24,25 +25,27 @@ const uniqid = (() => {
 
 mkdirp.sync(FILES_DIRNAME);
 
-let startid;
-try {
-	startid = +fs.readFileSync(`${FILES_DIRNAME}/startid`);
-	if (isNaN(startid) || startid < 0) throw 0;
-} catch (_) {
-	startid = 42424242;
-}
-const genidcode = (() => {
-	let i = startid;
-	return () => {
-		const code = `0000000${(i*47%4294967291).toString(36)}`.slice(-7);
-		//(x -> nx) : F_p -> F_p with p prime and 0<n<x is a bijection
-		i++;
-		fs.writeFileSync(`${FILES_DIRNAME}/startid`, i.toString());
-		let res = "";
-		for (let j = 0; j < 7; j++) res += code[2*j % 7]; //same goes here
-		return res;
+function genidcode(){
+	const alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
+	const domainsize = Math.pow(256, 5);
+	const targetsize = Math.pow(62, 6);
+	const limit = domainsize - (domainsize % targetsize);
+
+	let number;
+	do {
+		const bytes = crypto.randomBytes(5);  // 62^6 < 256^5, so large enough
+		number = 0;  // 256^5 < 2^52, so fits in JS's double
+		for (let i = 0; i < 5; i++) number = 256 * number + bytes[i];
+	} while (number >= limit);  // ensure uniformity
+
+	let code = "";
+	for (let i = 0; i < 6; i++) {
+		code += alphabet[number % 62];
+		number = Math.floor(number / 62);
 	}
-})();
+	return code;
+}
 
 if (HOURS_RETENTION > 0) {
 	setInterval(() => {
@@ -51,7 +54,7 @@ if (HOURS_RETENTION > 0) {
 		let count = 0;
 
 		for (const file of dirlist) {
-			if (file.slice(-6) === "-fname" || file === "startid") continue;
+			if (file.slice(-6) === "-fname") continue;
 			const path = `${FILES_DIRNAME}/${file}`;
 			try {
 				const stats = fs.statSync(path);
@@ -89,17 +92,29 @@ app.post("/gooi/:fname", (req, res) => {
 		res.end("Invalid filename given");
 		return;
 	}
-	const id = genidcode();
 
-	let fd;
-	try {
-		fd = fs.openSync(`${FILES_DIRNAME}/${id}`, "w");
-	} catch (e) {
-		console.error(e);
+	let id, fd, id_file_write_error;
+	// If we don't succeed in 10 tries, let's report failure
+	for (let i = 0; i < 10; i++) {
+		id = genidcode();
+		try {
+			fd = fs.openSync(`${FILES_DIRNAME}/${id}`, "wx");
+			break;
+		} catch (e) {
+			id_file_write_error = e;
+			id = fd = null;
+			continue;
+		}
+	}
+
+	if (fd == null) {
+		console.log("ID/filewrite error!");
+		console.log(id_file_write_error);
 		res.writeHead(500);
 		res.end("Could not open file to write to\n");
 		return;
 	}
+
 	const stream = fs.createWriteStream(null, { fd });
 	req.pipe(stream);
 	req.on("end", function() {
