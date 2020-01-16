@@ -71,7 +71,7 @@ if (HOURS_RETENTION > 0) {
 }
 
 const idMiddleware = function(req, res, next) {
-	const id = req.params.id.replace(/[^0-9a-z]/g, "").substr(0, 10);
+	const id = req.params.id.replace(/[^0-9a-z]/gi, "").substr(0, 10);
 	if (!fs.existsSync(`${FILES_DIRNAME}/${id}`) || !fs.existsSync(`${FILES_DIRNAME}/${id}-fname`)) {
 		res.writeHead(404);
 		res.end("404 not found");
