@@ -16,7 +16,8 @@ function upload(gooi, stream, filename) {
 			headers: {
 				"Content-Type": "application/octet-stream",
 				"Transfer-Encoding": "chunked",
-			}
+			},
+			auth: gooi.auth || undefined
 		});
 
 		req.on("response", res => {
@@ -79,10 +80,11 @@ function makeFilenameSafe(fname) {
 }
 
 module.exports = class Gooi {
-	constructor(hostname, port, prefix) {
-		this.hostname = hostname;
-		this.port = port;
-		this.prefix = prefix;
+	constructor(params) {
+		this.hostname = params.hostname;
+		this.port = params.port;
+		this.prefix = params.prefix;
+		this.auth = params.auth;  // optional
 	}
 
 	async gooi(fnames, params = {}) {

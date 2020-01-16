@@ -4,6 +4,10 @@
 const Gooi = require('../main.js');
 const toClipboard = require("to-clipboard");
 const path = require('path');
+const fs = require('fs');
+
+const configsDir = process.env['XDG_CONFIG_HOME'] || `${process.env['HOME']}/.config/`;
+const configFile = path.join(configsDir, 'gooi', 'config.json');
 
 function usageandexit(code) {
 	console.error("Usage: gooi [flags...] <file>");
@@ -13,12 +17,47 @@ function usageandexit(code) {
 	console.error("  -n <name>  Use the given name for the uploaded file instead of the default")
 	console.error("  -t         Trim filename from the given URL")
 	console.error("  -h         Show this");
+	console.error("");
+	console.error(`A JSON configuration file is required at ${configFile},`);
+	console.error("with the following structure:");
+	console.error("  {");
+	console.error("    \"hostname\": \"your.gooi.server.com\",");
+	console.error("    \"netrc\": \"/path/to/netrc/file\"     // optional");
+	console.error("  }");
 	process.exit(code);
 }
 
-const configsDir = process.env['XDG_CONFIG_HOME'] || `${process.env['HOME']}/.config/`;
-const configFile = path.join(configsDir, 'gooi', 'config.json');
-const config = require(configFile);
+function parseNetrc(text) {
+	const result = new Map();
+	let current = null;
+	for (let line of text.split("\n")) {
+		if (line.match(/^\s*$/)) continue;
+		const m = line.match(/^\s*(\S+)\s+(.*)$/);
+		if (!m) continue;
+		const key = m[1];
+		const value = m[2];
+		switch (key) {
+			case "machine":
+				current = {login: null, password: null};
+				result.set(value, current);
+				break;
+			case "login":
+			case "password":
+				current[key] = value;
+				break;
+		}
+	}
+	return result;
+}
+
+let config;
+try {
+	config = require(configFile);
+} catch(e) {
+	console.error(`Error: Could not read config file: ${e}`);
+	console.error("");
+	usageandexit(1);
+}
 
 if (config.url != null) {
 	console.warn('config: "url" is deprecated, please use "hostname"');
@@ -33,8 +72,15 @@ if (config.hostname == null) {
 }
 config.port = config.port || 443;
 config.prefix = config.prefix || '/gooi/';
+if (config.netrc != null) {
+	const credentials = parseNetrc(fs.readFileSync(config.netrc).toString()).get(config.hostname);
+	if (credentials != null) {
+		config.auth = credentials.login + ":" + credentials.password;
+	}
+	delete config.netrc;
+}
 
-const gooi = new Gooi(config.hostname, config.port, config.prefix);
+const gooi = new Gooi(config);
 
 const opts = {};
 const fnames = [];
