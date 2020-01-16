@@ -30,10 +30,16 @@ function usageandexit(code) {
 function parseNetrc(text) {
 	const result = new Map();
 	let current = null;
-	for (let line of text.split("\n")) {
-		if (line.match(/^\s*$/)) continue;
-		const m = line.match(/^\s*(\S+)\s+(.*)$/);
-		if (!m) continue;
+
+	const lines = text.split("\n");
+	for (let i = 0; i < lines.length; i++) {
+		if (lines[i].match(/^\s*$/)) continue;
+		const m = lines[i].match(/^\s*(\S+)\s+(.*)$/);
+		if (!m) {
+			console.error(`Unrecognised line in netrc at line ${i+1}`);
+			process.exit(1);
+		}
+
 		const key = m[1];
 		const value = m[2];
 		switch (key) {
@@ -45,8 +51,12 @@ function parseNetrc(text) {
 			case "password":
 				current[key] = value;
 				break;
+			default:
+				console.error(`Unrecognised key in netrc at line ${i+1}`);
+				process.exit(1);
 		}
 	}
+
 	return result;
 }
 
