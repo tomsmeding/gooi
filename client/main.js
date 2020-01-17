@@ -5,6 +5,8 @@ const fs = require("fs");
 const path = require("path");
 const yazl = require("yazl");
 
+const parseNetrc = require('./netrc.js');
+
 function upload(gooi, stream, filename) {
 	return new Promise((resolve, reject) => {
 		const req = https.request({
@@ -117,4 +119,27 @@ module.exports = class Gooi {
 	vang(id) {
 		// TODO
 	}
-}
+};
+
+module.exports.readConfig = function readConfig (fname) {
+	if (!fname) {
+		const configsDir = process.env['XDG_CONFIG_HOME'] || `${process.env['HOME']}/.config/`;
+		fname = path.join(configsDir, 'gooi', 'config.json');
+	}
+
+	let config;
+	try {
+		config = require(fname);
+	} catch (e) {
+		throw new Error(`Could not read config file: ${e}`);
+	}
+
+	if (config.hostname == null) {
+		throw new Error('config: hostname required');
+	}
+	config.port = config.port || 443;
+	config.prefix = config.prefix || '/gooi/';
+	config = parseNetrc(config);
+
+	return config;
+};
