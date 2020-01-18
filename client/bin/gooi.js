@@ -4,7 +4,6 @@
 const Gooi = require('../main.js');
 const toClipboard = require("to-clipboard");
 const path = require('path');
-const fs = require('fs');
 
 const configsDir = process.env['XDG_CONFIG_HOME'] || `${process.env['HOME']}/.config/`;
 const configFile = path.join(configsDir, 'gooi', 'config.json');
@@ -27,67 +26,13 @@ function usageandexit(code) {
 	process.exit(code);
 }
 
-function parseNetrc(text) {
-	const result = new Map();
-	let current = null;
-
-	const lines = text.split("\n");
-	for (let i = 0; i < lines.length; i++) {
-		if (lines[i].match(/^\s*$/)) continue;
-		const m = lines[i].match(/^\s*(\S+)\s+(.*)$/);
-		if (!m) {
-			console.error(`Unrecognised line in netrc at line ${i+1}`);
-			process.exit(1);
-		}
-
-		const key = m[1];
-		const value = m[2];
-		switch (key) {
-			case "machine":
-				current = {login: null, password: null};
-				result.set(value, current);
-				break;
-			case "login":
-			case "password":
-				current[key] = value;
-				break;
-			default:
-				console.error(`Unrecognised key in netrc at line ${i+1}`);
-				process.exit(1);
-		}
-	}
-
-	return result;
-}
-
 let config;
 try {
-	config = require(configFile);
-} catch(e) {
-	console.error(`Error: Could not read config file: ${e}`);
+	config = Gooi.readConfig(configFile);
+} catch (e) {
+	console.error(e.toString());
 	console.error("");
 	usageandexit(1);
-}
-
-if (config.url != null) {
-	console.warn('config: "url" is deprecated, please use "hostname"');
-	if (config.hostname == null) {
-		config.hostname = config.url;
-		delete config.url;
-	}
-}
-if (config.hostname == null) {
-	console.error('config: hostname required');
-	process.exit(1);
-}
-config.port = config.port || 443;
-config.prefix = config.prefix || '/gooi/';
-if (config.netrc != null) {
-	const credentials = parseNetrc(fs.readFileSync(config.netrc).toString()).get(config.hostname);
-	if (credentials != null) {
-		config.auth = credentials.login + ":" + credentials.password;
-	}
-	delete config.netrc;
 }
 
 const gooi = new Gooi(config);
