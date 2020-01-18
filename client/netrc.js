@@ -9,8 +9,7 @@ function parseNetrc(text) {
 		if (lines[i].match(/^\s*$/)) continue;
 		const m = lines[i].match(/^\s*(\S+)\s+(.*)$/);
 		if (!m) {
-			console.error(`Unrecognised line in netrc at line ${i+1}`);
-			process.exit(1);
+			throw new Error(`Unrecognised line in netrc at line ${i+1}`);
 		}
 
 		const key = m[1];
@@ -25,8 +24,7 @@ function parseNetrc(text) {
 				current[key] = value;
 				break;
 			default:
-				console.error(`Unrecognised key in netrc at line ${i+1}`);
-				process.exit(1);
+				throw new Error(`Unrecognised key in netrc at line ${i+1}`);
 		}
 	}
 
