@@ -20,6 +20,21 @@ function validUTF8Head(buf) {
 	return true;
 }
 
+function validUTF8HeadFile(fname, cb) {
+	fs.open(fname, "r", function(err, fd) {
+		if (err) {
+			console.error(err);
+			cb(null);
+			return;
+		}
+
+		const buffer = Buffer.alloc(4096);
+		fs.read(fd, buffer, 0, buffer.length, 0, function(err, bytesRead, buffer) {
+			cb(validUTF8Head(buffer));
+		});
+	});
+}
+
 function getMime(filename, datafname, cb) {
 	const mime = Mime.getType(filename);
 	if (mime != null) {
@@ -27,16 +42,21 @@ function getMime(filename, datafname, cb) {
 		return;
 	}
 
+	function tryUTF8() {
+		validUTF8HeadFile(datafname, function(valid) {
+			if (valid) cb("text/plain");
+			else cb(null);
+		});
+	}
+
 	FileType.fromFile(datafname)
 		.then(function(res) {
 			if (res) cb(res.mime);
-			else if (validUTF8Head(buffer)) cb("text/plain");
-			else cb(null);
+			else tryUTF8();
 		})
 		.catch(function(err) {
 			console.error(err);
-			if (validUTF8Head(buffer)) cb("text/plain");
-			else cb(null);
+			tryUTF8();
 		});
 };
 
