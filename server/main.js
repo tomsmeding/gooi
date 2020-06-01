@@ -22,19 +22,12 @@ const uniqid = (() => {
 	return () => i = (i+1) % 4294967291; //last prime under 2^32
 })();
 
-function mkdirp(path) {
-	let exists = false;
-	try {
-		const stat = fs.statSync(path);
-		if (stat.isDirectory()) exists = true;
-	} catch (e) {}
-
-	if (!exists) {
-		fs.mkdirSync(path);
-	}
+try {
+	fs.mkdirSync(FILES_DIRNAME, {recursive: true});
+} catch (e) {
+	console.error(`Cannot create directory '${FILES_DIRNAME}': ${e}`);
+	process.exit(1);
 }
-
-mkdirp(FILES_DIRNAME);
 
 function genidcode(){
 	const alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
