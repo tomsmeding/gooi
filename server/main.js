@@ -151,9 +151,8 @@ app.get("/vang/:id", idMiddleware, (req, res) => {
 app.get("/vang/:id/:fname", idMiddleware, (req, res) => {
 	let filedesc = null;
 	let stats = null;
+	const datafname = `${FILES_DIRNAME}/${req.id}`;
 	try {
-		const datafname = `${FILES_DIRNAME}/${req.id}`;
-		filedesc = fs.openSync(datafname, "r");
 		stats = fs.statSync(datafname);
 	} catch (e) {
 		console.error(e);
@@ -162,17 +161,18 @@ app.get("/vang/:id/:fname", idMiddleware, (req, res) => {
 		return;
 	}
 
-	const mime = getMime(req.params.fname, filedesc) || 'application/unknown';
-	res.writeHead(200, {
-		"Content-Length": stats.size.toString(),
-		"Content-Type": `${mime}; charset=utf-8`,
-	});
+	getMime(req.params.fname, datafname, function(mime) {
+		if (!mime) mime = "application/unknown";
 
-	fs.createReadStream(null, {
-		fd: filedesc,
-	}).pipe(res);
-	res.on("error", function(e) {
-		console.error(e);
+		res.writeHead(200, {
+			"Content-Length": stats.size.toString(),
+			"Content-Type": `${mime}; charset=utf-8`,
+		});
+
+		fs.createReadStream(datafname).pipe(res);
+		res.on("error", function(e) {
+			console.error(e);
+		});
 	});
 });
 

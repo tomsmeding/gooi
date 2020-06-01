@@ -1,5 +1,5 @@
 const fs = require("fs");
-const fileType = require("file-type");
+const FileType = require("file-type");
 const Mime = require('mime');
 
 // Returns true if the buffer can be the initial part of a valid utf-8 encoded string
@@ -20,24 +20,24 @@ function validUTF8Head(buf) {
 	return true;
 }
 
-function getMime(filename, filedesc) {
+function getMime(filename, datafname, cb) {
 	const mime = Mime.getType(filename);
-	if (mime != null) return mime;
-
-	const buffer = Buffer.alloc(fileType.minimumBytes);
-
-	try {
-		fs.readSync(filedesc, buffer, 0, fileType.minimumBytes, 0);
-	} catch (e) {
-		console.error(e);
-		return null;
+	if (mime != null) {
+		cb(mime);
+		return;
 	}
 
-	const res = fileType(buffer);
-
-	if (res) return res.mime;
-	if (validUTF8Head(buffer)) return "text/plain";
-	return null;
+	FileType.fromFile(datafname)
+		.then(function(res) {
+			if (res) cb(res.mime);
+			else if (validUTF8Head(buffer)) cb("text/plain");
+			else cb(null);
+		})
+		.catch(function(err) {
+			console.error(err);
+			if (validUTF8Head(buffer)) cb("text/plain");
+			else cb(null);
+		});
 };
 
 module.exports = getMime;
