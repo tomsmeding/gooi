@@ -24,8 +24,12 @@ async function validUTF8HeadFile(fname, cb) {
 	try {
 		const fh = await fs.open(fname, "r");
 		const buffer = Buffer.alloc(4096);
-		fh.read(buffer, 0, buffer.length, 0);
-		fh.close().then(function() {});  // take your time
+		await fh.read(buffer, 0, buffer.length, 0);
+
+		// Don't await the close, let it finish in its own time
+		fh.close().catch(function(err) {
+			console.error(err);
+		});
 
 		return validUTF8Head(buffer);
 	} catch (err) {
