@@ -154,7 +154,7 @@ app.get("/vang/:id/:fname", idMiddleware, (req, res) => {
 		return;
 	}
 
-	getMime(req.params.fname, datafname, function(mime) {
+	getMime(req.params.fname, datafname).then(function(mime) {
 		if (!mime) mime = "application/unknown";
 
 		res.writeHead(200, {

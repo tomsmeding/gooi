@@ -1,4 +1,4 @@
-const fs = require("fs");
+const fs = require("fs/promises");
 const FileType = require("file-type");
 const Mime = require('mime');
 
@@ -20,44 +20,36 @@ function validUTF8Head(buf) {
 	return true;
 }
 
-function validUTF8HeadFile(fname, cb) {
-	fs.open(fname, "r", function(err, fd) {
-		if (err) {
-			console.error(err);
-			cb(null);
-			return;
-		}
-
+async function validUTF8HeadFile(fname, cb) {
+	try {
+		const fh = await fs.open(fname, "r");
 		const buffer = Buffer.alloc(4096);
-		fs.read(fd, buffer, 0, buffer.length, 0, function(err, bytesRead, buffer) {
-			cb(validUTF8Head(buffer));
-		});
-	});
+		fh.read(buffer, 0, buffer.length, 0);
+		fh.close().then(function() {});  // take your time
+
+		return validUTF8Head(buffer);
+	} catch (err) {
+		console.error(err);
+		return null;
+	}
 }
 
-function getMime(filename, datafname, cb) {
+async function getMime(filename, datafname, cb) {
 	const mime = Mime.getType(filename);
 	if (mime != null) {
-		cb(mime);
-		return;
+		return mime;
 	}
 
-	function tryUTF8() {
-		validUTF8HeadFile(datafname, function(valid) {
-			if (valid) cb("text/plain");
-			else cb(null);
-		});
+	try {
+		const res = await FileType.fromFile(datafname);
+		if (res) return res.mime;
+	} catch (err) {
+		console.error(err);
 	}
 
-	FileType.fromFile(datafname)
-		.then(function(res) {
-			if (res) cb(res.mime);
-			else tryUTF8();
-		})
-		.catch(function(err) {
-			console.error(err);
-			tryUTF8();
-		});
+	const valid = await validUTF8HeadFile(datafname);
+	if (valid) return "text/plain";
+	else return null;
 };
 
 module.exports = getMime;
