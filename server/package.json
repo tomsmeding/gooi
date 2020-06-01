@@ -24,7 +24,6 @@
 	"dependencies": {
 		"express": "^4.16.4",
 		"file-type": "^10.7.0",
-		"mime": "^2.4.0",
-		"mkdirp": "^0.5.1"
+		"mime": "^2.4.0"
 	}
 }

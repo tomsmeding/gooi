@@ -5,7 +5,6 @@ const fs = require("fs");
 const http = require("http");
 const crypto = require("crypto");
 const app = require("express")();
-const mkdirp = require("mkdirp");
 const httpServer = http.Server(app);
 const getMime = require('./mime.js');
 
@@ -23,7 +22,19 @@ const uniqid = (() => {
 	return () => i = (i+1) % 4294967291; //last prime under 2^32
 })();
 
-mkdirp.sync(FILES_DIRNAME);
+function mkdirp(path) {
+	let exists = false;
+	try {
+		const stat = fs.statSync(path);
+		if (stat.isDirectory()) exists = true;
+	} catch (e) {}
+
+	if (!exists) {
+		fs.mkdirSync(path);
+	}
+}
+
+mkdirp(FILES_DIRNAME);
 
 function genidcode(){
 	const alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
