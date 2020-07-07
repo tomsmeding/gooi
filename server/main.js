@@ -119,20 +119,33 @@ app.post("/gooi/:fname", (req, res) => {
 		return;
 	}
 
+	// Set to true if the request properly ends in the "end" event; if it
+	// doesn't, we can clean up in the "close" event.
+	let proper_finish = false;
+
+	function cleanup() {
+		try { fs.closeSync(fd); } catch (e) {}
+		try { fs.unlinkSync(`${FILES_DIRNAME}/${id}`); } catch (e) {}
+	}
+
 	const stream = fs.createWriteStream(null, { fd });
 	req.pipe(stream);
 	req.on("end", function() {
 		fs.writeFileSync(`${FILES_DIRNAME}/${id}-fname`, fname);
+		proper_finish = true;
 		res.writeHead(200);
 		res.end(`https://${HTTPHOST}/vang/${id}/${encodeURIComponent(fname)}\n`);
 	});
 	req.on("error", function(e) {
 		console.error(e);
+		cleanup();
 		res.writeHead(500);
 		res.end("Error while writing file\n");
-		try {
-			fs.closeSync(fd);
-		} catch (e) {}
+	});
+	req.on("close", function() {
+		if (!proper_finish) {
+			cleanup();
+		}
 	});
 });
 
