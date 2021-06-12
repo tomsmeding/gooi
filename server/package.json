@@ -1,6 +1,6 @@
 {
 	"name": "gooi-server",
-	"version": "2.1.1",
+	"version": "2.1.2",
 	"description": "Server for gooi to allow for easy catching",
 	"main": "main.js",
 	"scripts": {
@@ -23,7 +23,7 @@
 	"license": "MIT",
 	"dependencies": {
 		"express": "^4.17.1",
-		"file-type": "^14.5.0",
-		"mime": "^2.4.6"
+		"file-type": "^16.5.0",
+		"mime": "^2.5.2"
 	}
 }
