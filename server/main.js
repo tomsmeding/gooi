@@ -17,11 +17,6 @@ if (HTTPHOST === '') {
 
 const HOURS_RETENTION = Number.parseInt(process.env['GOOI_HOURS_RETENTION']||'24', 10);
 
-const uniqid = (() => {
-	let i = 0;
-	return () => i = (i+1) % 4294967291; //last prime under 2^32
-})();
-
 try {
 	fs.mkdirSync(FILES_DIRNAME, {recursive: true});
 } catch (e) {
@@ -155,7 +150,6 @@ app.get("/vang/:id", idMiddleware, (req, res) => {
 });
 
 app.get("/vang/:id/:fname", idMiddleware, (req, res) => {
-	let filedesc = null;
 	let stats = null;
 	const datafname = `${FILES_DIRNAME}/${req.id}`;
 	try {

@@ -20,7 +20,7 @@ function validUTF8Head(buf) {
 	return true;
 }
 
-async function validUTF8HeadFile(fname, cb) {
+async function validUTF8HeadFile(fname) {
 	try {
 		const fh = await fs.open(fname, "r");
 		const buffer = Buffer.alloc(4096);
@@ -38,7 +38,7 @@ async function validUTF8HeadFile(fname, cb) {
 	}
 }
 
-async function getMime(filename, datafname, cb) {
+async function getMime(filename, datafname) {
 	const mime = Mime.getType(filename);
 	if (mime != null) {
 		return mime;
