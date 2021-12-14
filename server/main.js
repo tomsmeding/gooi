@@ -24,6 +24,66 @@ try {
 	process.exit(1);
 }
 
+function hashFile(path, cb) {
+	try {
+		const hash = crypto.createHash("sha256");
+		const stream = fs.createReadStream(path);
+		stream.on("data", data => hash.update(data));
+		stream.on("close", () => cb(hash.digest(), null));
+		stream.on("error", e => cb(null, e));
+	} catch (e) {
+		cb(null, e);
+	}
+}
+
+// sha256 digest in base64 => fileid
+// Maps hashes to the most recent file whose contents match the hash. Used for
+// deduplication. The digests are base64-encoded so that comparison is
+// value-based instead of pointer-based.
+const hashmap = new Map();
+
+function initialiseHashmap() {
+	let successCount = 0;
+	let queueLength = 0;
+	let mtimeCache = new Map();
+
+	for (const file of fs.readdirSync(FILES_DIRNAME)) {
+		if (file.slice(-6) === "-fname") continue;
+		const path = `${FILES_DIRNAME}/${file}`;
+
+		// Careful to stat the -fname file here, since the data file may be
+		// hardlinked to another.
+		const stats = fs.statSync(path + "-fname");
+		if (!stats.isFile()) continue;
+		const current_mtime = stats.mtime.getTime();
+		mtimeCache.set(file, current_mtime);
+
+		queueLength++;
+		hashFile(path, (digest, err) => {
+			if (err) {
+				console.error(`[hash] Error in reading '${path}': ${e.message}`);
+			} else {
+				// Convert to base64 beforehand so that comparison is
+				// value-based instead of pointer-based.
+				digest = digest.toString("base64");
+				// console.log("[hash]", digest, file);
+				if (!hashmap.has(digest) || current_mtime > mtimeCache.get(hashmap.get(digest))) {
+					// if (hashmap.has(digest)) console.log("[hash] -> overwrote", hashmap.get(digest));
+					hashmap.set(digest, file);
+				}
+				successCount++;
+			}
+
+			queueLength--;
+			if (queueLength == 0) {
+				console.log(`[hash] Hashed ${successCount} files successfully`);
+			}
+		});
+	}
+}
+
+initialiseHashmap();
+
 function genidcode(){
 	const alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
@@ -46,6 +106,66 @@ function genidcode(){
 	return code;
 }
 
+function dedupNewFile(fileid) {
+	hashFile(`${FILES_DIRNAME}/${fileid}`, (digest, err) => {
+		if (err) {
+			console.log(`[dedup] Error hashing newly uploaded file: ${err}`);
+			return;
+		}
+
+		digest = digest.toString("base64");
+		const orig_fileid = hashmap.get(digest);
+		if (orig_fileid != null) {
+			// We've uploaded a file that already existed. Let's hard-link this
+			// file to the old one.
+			const oldpath = `${FILES_DIRNAME}/${orig_fileid}`;
+			const newpath = `${FILES_DIRNAME}/${fileid}`;
+
+			// We need to do this sequence of actions atomically, to ensure
+			// that we don't try to concurrently access the new file while
+			// we're in the process of replacing it by a link. Furthermore we
+			// need to be careful in case anything goes wrong.
+			try {
+				fs.renameSync(newpath, newpath + "-linkbak");
+			} catch (e) {
+				console.log(`[dedup] Failed to rename ${fileid} to linkbak: ${e}`);
+				return;
+			}
+
+			try {
+				fs.linkSync(oldpath, newpath);
+			} catch (e) {
+				console.log(`[dedup] Failed to link ${orig_fileid} to ${fileid}: ${e}`);
+				try {
+					fs.renameSync(newpath + "-linkbak", newpath);
+				} catch (e) {
+					console.log(`[dedup] LOST FILE! Failed to rename back after failed link of ${fileid}.`);
+					// Remove everything we can find for this fileid
+					try { fs.unlinkSync(newpath); } catch (e) {}
+					try { fs.unlinkSync(newpath + "-linkbak"); } catch (e) {}
+					try { fs.unlinkSync(newpath + "-fname"); } catch (e) {}
+				}
+				return;
+			}
+
+			try {
+				fs.unlinkSync(newpath + "-linkbak");
+			} catch (e) {
+				console.log(`[dedup] Failed to remove ${fileid}-linkbak: ${e}`);
+				return;
+			}
+
+			console.log(`[dedup] Successfully hardlinked ${fileid} to ${orig_fileid}`);
+		}
+
+		// Add the uploaded file to the hashmap, regardless of whether it was a
+		// duplicate or not. It it was a duplicate, this overwrites any
+		// existing entry, which ensures that the hashmap always contains the
+		// newest entry.
+		hashmap.set(digest, fileid);
+	});
+}
+
 if (HOURS_RETENTION > 0) {
 	setInterval(() => {
 		const dirlist = fs.readdirSync(FILES_DIRNAME);
@@ -56,12 +176,24 @@ if (HOURS_RETENTION > 0) {
 			if (file.slice(-6) === "-fname") continue;
 			const path = `${FILES_DIRNAME}/${file}`;
 			try {
-				const stats = fs.statSync(path);
+				// Careful to stat the -fname file here, since the data file
+				// may be hardlinked to another.
+				const stats = fs.statSync(path + "-fname");
 				if (!stats.isFile()) continue;
-				if (nowtime-stats.mtime.getTime() > HOURS_RETENTION*3600*1000) {
-					fs.unlinkSync(path);
-					fs.unlinkSync(path + "-fname");
+				if (nowtime - stats.mtime.getTime() > HOURS_RETENTION*3600*1000) {
+					// console.log(`[cleanup] Removing ${file}`);
 					count++;
+
+					hashFile(path, (digest, err) => {
+						if (err) {
+							console.log(`[cleanup] Error hashing ${file}, not deleting: ${err}`);
+							return;
+						}
+						digest = digest.toString("base64");
+						if (hashmap.get(digest) == file) hashmap.delete(digest);
+						fs.unlinkSync(path);
+						fs.unlinkSync(path + "-fname");
+					});
 				}
 			} catch (e) {
 				console.error(`[cleanup] Couldn't process '${path}': ${e.message}`);
@@ -107,7 +239,7 @@ app.post("/gooi/:fname", (req, res) => {
 	}
 
 	if (fd == null) {
-		console.log("ID/filewrite error!");
+		console.log("ID/file write error!");
 		console.log(id_file_write_error);
 		res.writeHead(500);
 		res.end("Could not open file to write to\n");
@@ -130,12 +262,14 @@ app.post("/gooi/:fname", (req, res) => {
 		proper_finish = true;
 		res.writeHead(200);
 		res.end(`https://${HTTPHOST}/vang/${id}/${encodeURIComponent(fname)}\n`);
+
+		dedupNewFile(id);
 	});
 	req.on("error", function(e) {
 		console.error(e);
 		cleanup();
 		res.writeHead(500);
-		res.end("Error while writing file\n");
+		res.end("Error while receiving file\n");
 	});
 	req.on("close", function() {
 		if (!proper_finish) {
