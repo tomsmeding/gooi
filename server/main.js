@@ -68,7 +68,7 @@ if (HOURS_RETENTION > 0) {
 			}
 		}
 
-		console.log(`[cleanup] Removed ${count} file(s)`);
+		if (count > 0) console.log(`[cleanup] Removed ${count} file(s)`);
 	}, 3600*1000); //every hour
 }
 
