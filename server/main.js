@@ -312,7 +312,7 @@ app.get("/vang/:id/:fname", idMiddleware, (req, res) => {
 
 app.post("/houvast/:id", idMiddleware, (req, res) => {
 	try {
-		const fd = fs.openSync(`${FILES_DIRNAME}/${req.id}`, "a");
+		const fd = fs.openSync(`${FILES_DIRNAME}/${req.id}-fname`, "a");
 		const now = new Date();
 		fs.futimesSync(fd, now, now);
 		fs.closeSync(fd);
