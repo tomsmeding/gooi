@@ -78,6 +78,7 @@ if [[ -z $opt_filename ]]; then
 fi
 
 upload_fname=${opt_replacement_name:-$(basename "$opt_filename")}
+upload_fname=${upload_fname// /%20}
 
 server_hostname=$(jq -r 'if has("hostname") then .hostname else "" end' <"$CONFIG_FILE")
 netrc_file=$(jq -r 'if has("netrc") then .netrc else "" end' <"$CONFIG_FILE")
