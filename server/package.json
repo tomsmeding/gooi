@@ -1,12 +1,10 @@
 {
+	"type": "module",
 	"name": "gooi-server",
-	"version": "2.1.3",
+	"version": "2.1.4",
 	"description": "Server for gooi to allow for easy catching",
-	"main": "main.js",
-	"scripts": {
-		"test": "echo \"Error: no test specified\" && exit 1",
-		"start": "node main.js"
-	},
+	"exports": "./main.js",
+	"engines": { "node": ">=18" },
 	"keywords": [
 		"gooi",
 		"files",
@@ -15,15 +13,15 @@
 		"transmit",
 		"server"
 	],
-	"author": "Tom Smeding <tom.smeding@gmail.com> (https://tomsmeding.com)",
+	"author": "Tom Smeding <tom@tomsmeding.com> (https://tomsmeding.com)",
 	"contributors": [
-		"Tom Smeding <tom.smeding@gmail.com> (https://tomsmeding.com)",
+		"Tom Smeding <tom@tomsmeding.com> (https://tomsmeding.com)",
 		"Lieuwe Rooijakkers <lieuwerooijakkers@gmail.com> (https://www.lieuwe.xyz)"
 	],
 	"license": "MIT",
 	"dependencies": {
-		"express": "^4.19.2",
-		"file-type": "^16.5.0",
-		"mime": "^2.5.2"
+		"express": "^4.21.0",
+		"file-type": "^19.5.0",
+		"mime": "^4.0.4"
 	}
 }

@@ -1,6 +1,6 @@
-const fs = require("fs/promises");
-const FileType = require("file-type");
-const Mime = require('mime');
+import fs from "node:fs/promises";
+import {fileTypeFromFile} from "file-type";
+import Mime from "mime";
 
 // Returns true if the buffer can be the initial part of a valid utf-8 encoded string
 function validUTF8Head(buf) {
@@ -45,7 +45,7 @@ async function getMime(filename, datafname) {
 	}
 
 	try {
-		const res = await FileType.fromFile(datafname);
+		const res = await fileTypeFromFile(datafname);
 		if (res) return res.mime;
 	} catch (err) {
 		console.error(err);
@@ -56,4 +56,4 @@ async function getMime(filename, datafname) {
 	else return null;
 };
 
-module.exports = getMime;
+export default getMime;

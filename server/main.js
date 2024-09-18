@@ -1,12 +1,13 @@
 #!/usr/bin/env node
-"use strict";
 
-const fs = require("fs");
-const http = require("http");
-const crypto = require("crypto");
-const app = require("express")();
+import fs from "node:fs";
+import http from "node:http";
+import crypto from "node:crypto";
+import express from "express";
+import getMime from "./mime.js";
+
+const app = express();
 const httpServer = http.Server(app);
-const getMime = require('./mime.js');
 
 const HTTPHOST = process.env['GOOI_HTTP_HOST'] || '';
 const HTTPPORT = Number.parseInt(process.env['GOOI_HTTP_PORT']||'8080', 10);
