@@ -1,7 +1,7 @@
 {
 	"type": "module",
 	"name": "gooi-server",
-	"version": "2.1.4",
+	"version": "2.1.5",
 	"description": "Server for gooi to allow for easy catching",
 	"exports": "./main.js",
 	"engines": { "node": ">=18" },
