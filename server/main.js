@@ -168,6 +168,7 @@ app.get("/vang/:id/:fname", idMiddleware, (req, res) => {
 		res.writeHead(200, {
 			"Content-Length": stats.size.toString(),
 			"Content-Type": `${mime}; charset=utf-8`,
+			"Accept-Ranges": "bytes",
 		});
 
 		fs.createReadStream(datafname).pipe(res);
