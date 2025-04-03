@@ -147,7 +147,7 @@ app.post("/gooi/:fname", (req, res) => {
 
 app.get("/vang/:id", idMiddleware, (req, res) => {
 	const fname = fs.readFileSync(`${FILES_DIRNAME}/${req.id}-fname`).toString();
-	res.redirect(302, `/vang/${req.id}/${encodeURIComponent(fname)}`);
+	res.redirect(301, `/vang/${req.id}/${encodeURIComponent(fname)}`);
 });
 
 app.get("/vang/:id/:fname", idMiddleware, (req, res) => {
