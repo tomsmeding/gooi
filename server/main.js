@@ -169,6 +169,7 @@ app.get("/vang/:id/:fname", idMiddleware, (req, res) => {
 			"Content-Length": stats.size.toString(),
 			"Content-Type": `${mime}; charset=utf-8`,
 			"Accept-Ranges": "bytes",
+			"Cache-Control": "public, max-age=5184000, immutable",
 		});
 
 		fs.createReadStream(datafname).pipe(res);
