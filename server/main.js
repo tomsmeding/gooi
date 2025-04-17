@@ -151,28 +151,21 @@ app.get("/vang/:id", idMiddleware, (req, res) => {
 });
 
 app.get("/vang/:id/:fname", idMiddleware, (req, res) => {
-	let stats = null;
 	const datafname = `${FILES_DIRNAME}/${req.id}`;
-	try {
-		stats = fs.statSync(datafname);
-	} catch (e) {
-		console.error(e);
-		res.writeHead(500);
-		res.end("Could not open file\n");
-		return;
-	}
 
 	getMime(req.params.fname, datafname).then(function(mime) {
 		if (!mime) mime = "application/unknown";
 
-		res.writeHead(200, {
-			"Content-Length": stats.size.toString(),
-			"Content-Type": `${mime}; charset=utf-8`,
-			"Accept-Ranges": "bytes",
-			"Cache-Control": "public, max-age=5184000, immutable",
+		res.sendFile(datafname, {
+			headers: {
+				"Content-Type": `${mime}; charset=utf-8`,
+			},
+			maxAge: 5184000 * 1e3,
+			lastModified: true,
+			acceptRanges: true,
+			cacheControl:true,
+			immutable: true,
 		});
-
-		fs.createReadStream(datafname).pipe(res);
 		res.on("error", function(e) {
 			console.error(e);
 		});
