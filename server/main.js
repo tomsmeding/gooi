@@ -5,13 +5,14 @@ import http from "node:http";
 import crypto from "node:crypto";
 import express from "express";
 import getMime from "./mime.js";
+import { resolve } from 'path';
 
 const app = express();
 const httpServer = http.Server(app);
 
 const HTTPHOST = process.env['GOOI_HTTP_HOST'] || '';
 const HTTPPORT = Number.parseInt(process.env['GOOI_HTTP_PORT']||'8080', 10);
-const FILES_DIRNAME = process.env['GOOI_FILES_DIR'] || "files";
+const FILES_DIRNAME = resolve(process.env['GOOI_FILES_DIR'] || "files");
 if (HTTPHOST === '') {
 	throw new Error("GOOI_HTTP_HOST env var can't be empty");
 }
@@ -151,12 +152,11 @@ app.get("/vang/:id", idMiddleware, (req, res) => {
 });
 
 app.get("/vang/:id/:fname", idMiddleware, (req, res) => {
-	const datafname = `${FILES_DIRNAME}/${req.id}`;
-
-	getMime(req.params.fname, datafname).then(function(mime) {
+	getMime(req.params.fname, `${FILES_DIRNAME}/${req.id}`).then(function(mime) {
 		if (!mime) mime = "application/unknown";
 
-		res.sendFile(datafname, {
+		res.sendFile(`${req.id}`, {
+			root: FILES_DIRNAME,
 			headers: {
 				"Content-Type": `${mime}; charset=utf-8`,
 			},
